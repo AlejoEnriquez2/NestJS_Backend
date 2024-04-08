@@ -8,8 +8,6 @@ import {
     JoinColumn,
   } from 'typeorm';
   
-  // import { Customer } from './customer.entity';
-  
   export abstract class User {
     @PrimaryGeneratedColumn()
     id: number;

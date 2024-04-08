@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import config from './config';
 import { DatabaseModule } from './database/database.module';
 import { UserModule } from './user/user.module';
+import { TestModule } from './test/test.module';
 
 @Module({
   controllers: [AppController],
@@ -25,7 +26,7 @@ import { UserModule } from './user/user.module';
     }),
     ConfigModule,
     DatabaseModule,    
-    UserModule,
+    UserModule, TestModule,
   ],
 })
 export class AppModule {}
