@@ -5,11 +5,11 @@ import { User } from './user.entity';
 @Entity()
 export class Patient extends User {
     @Column({ type: 'varchar', length: 255})
-    status: string;
+    status?: string;
 
-    @Column({ type: 'int'})
-    grade: number;
+    @Column({ type: 'int', default: 0})
+    grade?: number;
 
     @Column({ type: 'varchar', length: 500})
-    description: string;
+    description?: string;
 }

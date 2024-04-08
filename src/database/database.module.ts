@@ -8,7 +8,7 @@ import config from 'src/config';
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
-      inject: [config.KEY],
+      inject: [config.KEY],      
       useFactory: (configService: ConfigType<typeof config>) => {
         const { user, host, database, password, port } = configService.postgres;
         return {
@@ -20,7 +20,7 @@ import config from 'src/config';
           database,
           synchronize: false,
           autoLoadEntities: true,
-        };
+        };        
       },
     }),
   ],

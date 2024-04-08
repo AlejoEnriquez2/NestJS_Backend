@@ -13,15 +13,15 @@ import {
   export abstract class User {
     @PrimaryGeneratedColumn()
     id: number;
+
+    @Column({ type: 'varchar', length: 255 })
+    name: string;
+  
+    @Column({ type: 'varchar', length: 255, unique: true})
+    email?: string;
   
     @Column({ type: 'varchar', length: 255 })
-    email: string;
-  
-    @Column({ type: 'varchar', length: 255 })
-    password: string; // encript
-  
-    @Column({ type: 'varchar', length: 100 })
-    role: string;
+    password?: string; // should encript
 
     @Column({ type: 'date', default: null})
     isDeleted: Date;
