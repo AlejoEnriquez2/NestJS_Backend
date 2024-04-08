@@ -12,4 +12,6 @@ export class Patient extends User {
 
     @Column({ type: 'varchar', length: 500})
     description?: string;
+
+    
 }

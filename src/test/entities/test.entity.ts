@@ -1,9 +1,9 @@
 import { Patient } from "src/user/entities/patient.entity";
-import { UserAnswers } from "./user-answers.entity";
-import { Column, CreateDateColumn, JoinColumn, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { UserAnswers } from "src/test/entities/user-answers.entity";
+import { Column, CreateDateColumn, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Form } from "./form.entity";
 
-
+@Entity()
 export class Test{
     
     @PrimaryGeneratedColumn()
@@ -12,10 +12,10 @@ export class Test{
     @Column({type: 'date'})
     testDate: Date;
 
-    @Column({type: 'number'})
+    @Column({type: 'int'})
     testTotalTime: number;
 
-    @Column({type: 'number'})
+    @Column({type: 'int'})
     testTotalGrade: number;
 
     @Column({type: 'varchar', length: 255})
@@ -71,16 +71,22 @@ export class Test{
     })
     updateAt: Date;
 
+
+    @Column({ type: 'date', default: null})
     isDeleted: Date
 
     // RELATIONS //
 
-    // @OneToOne(() => UserAnswers, userAnswers => userAnswers.test, {nullable: true})
-    // @JoinColumn({name: 'answersId'})
-    answer: UserAnswers;
+    @OneToOne(() => UserAnswers, userAnswers => userAnswers.test, {nullable: true})
+    @JoinColumn({name: 'answersId'})
+    answers: UserAnswers;
 
+    @OneToOne(() => Form, {nullable: true})
+    @JoinColumn({name: 'formId'})
     form: Form;
 
+    @OneToOne(() => Patient, {nullable: true})
+    @JoinColumn({name: 'patientId'})
     patient: Patient;
 
 
