@@ -1,6 +1,6 @@
 import { Patient } from "src/user/entities/patient.entity";
 import { UserAnswers } from "src/test/entities/user-answers.entity";
-import { Column, CreateDateColumn, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Form } from "./form.entity";
 
 @Entity()
@@ -81,11 +81,11 @@ export class Test{
     @JoinColumn({name: 'answersId'})
     answers: UserAnswers;
 
-    @OneToOne(() => Form, {nullable: true})
+    @ManyToOne(() => Form, {nullable: true})
     @JoinColumn({name: 'formId'})
     form: Form;
 
-    @OneToOne(() => Patient, {nullable: true})
+    @ManyToOne(() => Patient, {nullable: true})
     @JoinColumn({name: 'patientId'})
     patient: Patient;
 
