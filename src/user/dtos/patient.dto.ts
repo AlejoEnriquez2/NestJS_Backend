@@ -11,9 +11,11 @@ export class PatientDto extends CreateUserDto {
 
     @IsNumber()
     @IsOptional()
-    grade: number;
+    @ApiProperty( {description: 'The grade of the patient according to the SAGE test'})
+    grade?: number;
 
     @IsString()
     @IsOptional()
-    description: string;
+    @ApiProperty( {description: 'Relevant information about the patient'})
+    description?: string;
 }

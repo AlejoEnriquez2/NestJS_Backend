@@ -11,7 +11,7 @@ export class UserAnswers {
     orientationMonth: string;
 
     @Column({type: 'varchar', length: 15})
-    orientationDate: string;
+    orientationDay: string;
 
     @Column({type: 'varchar', length: 15})
     orientationYear: string;

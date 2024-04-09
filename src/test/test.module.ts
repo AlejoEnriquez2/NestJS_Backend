@@ -15,10 +15,12 @@ import { FormAnswersService } from './services/form-answers.service';
 import { FormController } from './controllers/form.controller';
 import { FormAnswersController } from './controllers/form-answers.controller';
 import { UserAnswersController } from './controllers/user-answers.controller';
+import { PatientService } from 'src/user/services/patient.service';
+import { FormAnswers } from './entities/form-answers.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Test, UserAnswers, Form, Patient])], 
+  imports: [TypeOrmModule.forFeature([Test, UserAnswers, Form, Patient, FormAnswers])], 
   controllers: [TestController, FormController, UserAnswersController, FormAnswersController],
-  providers: [TestService, FormService, UserAnswersService, FormAnswersService]
+  providers: [TestService, FormService, UserAnswersService, FormAnswersService, PatientService]
 })
 export class TestModule {}

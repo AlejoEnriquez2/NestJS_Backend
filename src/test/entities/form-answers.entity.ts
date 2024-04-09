@@ -53,7 +53,7 @@ export class FormAnswers{
     memoryPhrase: string;
 
     // RELATIONS //
-    @OneToOne(() => Form, form => form.formAnswers)
+    @OneToOne(() => Form)
     @JoinColumn({name: 'formId'})
     form: Form;
     

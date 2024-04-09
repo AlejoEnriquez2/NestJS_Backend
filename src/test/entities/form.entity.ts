@@ -43,8 +43,6 @@ export class Form {
     // RELATIONS //    
     // @OneToOne(() => FormAnswers, formAnswers => formAnswers.form, {nullable: true})
     // @JoinColumn({name: 'formAnswersId'})
-    // formAnswers: FormAnswers;
-    
-    // @OneToOne(() => FormAnswers, (formAnswers) => formAnswers.form, {nullable: true})
-    formAnswers: FormAnswers;
+    // formAnswers: FormAnswers;    
+
 }
