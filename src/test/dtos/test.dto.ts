@@ -67,8 +67,8 @@ export class CreateTestDto {
     patientPersonality: string;
 
     @IsNotEmpty()
-    @ApiProperty({ description: 'What kind of difficulties the patient had' })
-    patientDifficulties: string;
+    @ApiProperty({ description: 'Everyday difficulties' })
+    patientDifficulties: boolean;
 
 
     @IsNotEmpty()

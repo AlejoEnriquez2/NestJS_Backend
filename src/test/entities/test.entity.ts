@@ -54,8 +54,8 @@ export class Test{
     @Column({type: 'varchar', length: 50})
     patientPersonality: string;
 
-    @Column({type: 'varchar', length: 50})
-    patientDifficulties: string;
+    @Column({type: 'boolean'})
+    patientDifficulties: boolean;
 
     // TABLE FUNCTIONS //
 
