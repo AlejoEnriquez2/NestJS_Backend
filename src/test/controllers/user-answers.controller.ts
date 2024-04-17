@@ -24,8 +24,9 @@ export class UserAnswersController {
     }
 
     @Post()
-    create(@Body() payload: CreateUserAnswersDto){
-        return this.userAnswersService.create(payload);
+    async create(@Body() payload: CreateUserAnswersDto){
+        const answers = await this.userAnswersService.create(payload);
+        return { id: answers.answersId };
     }
 
     @Put(':id')	

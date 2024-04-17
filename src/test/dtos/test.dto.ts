@@ -13,7 +13,6 @@ export class CreateTestDto {
     testTotalTime: number;
 
     @IsNotEmpty()
-    @IsPositive()
     @ApiProperty({ description: 'The total grade of the Test' })
     testTotalGrade: number;
 

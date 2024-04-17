@@ -47,6 +47,9 @@ export class UserAnswers {
     executiveLines: string;
 
     @Column({type: 'bytea'})
+    executiveLinesDraw: Buffer;
+
+    @Column({type: 'bytea'})
     executiveDraw: Buffer;
 
     @Column({type: 'varchar', length: 50})

@@ -23,7 +23,16 @@ export class UserAnswersService {
     }
 
     create(createUserAnswersDto: CreateUserAnswersDto): Promise<UserAnswers>{
-        const userAnswers = this.userAnswersRepository.create(createUserAnswersDto);
+        const constructionsDraw = Array.from(Buffer.from(createUserAnswersDto.constructionsDraw));
+        const constructionsRedraw = Array.from(Buffer.from(createUserAnswersDto.constructionsRedraw));
+        const executiveDraw = Array.from(Buffer.from(createUserAnswersDto.executiveDraw));
+        const executiveLinesDraw = Array.from(Buffer.from(createUserAnswersDto.executiveLinesDraw));
+        createUserAnswersDto.constructionsDraw = constructionsDraw;
+        createUserAnswersDto.constructionsRedraw = constructionsRedraw;
+        createUserAnswersDto.executiveDraw = executiveDraw;
+        createUserAnswersDto.executiveLinesDraw = executiveLinesDraw;
+        
+        const userAnswers = this.userAnswersRepository.create(createUserAnswersDto);        
         return this.userAnswersRepository.save(userAnswers);
     }
 
