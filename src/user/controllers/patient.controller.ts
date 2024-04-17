@@ -1,7 +1,10 @@
-import { Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Post, Put, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { PatientService } from '../services/patient.service';
 import { PatientDto } from '../dtos/patient.dto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Patient } from '../entities/patient.entity';
+import { GetUser } from '../auth/get-patient.decorator';
 
 @ApiTags('Patient')
 @Controller('patient')
@@ -14,14 +17,38 @@ export class PatientController {
         return this.patientService.findAll();
     }
 
+    // @Get(':id')
+    // @ApiOperation({ summary: 'Find a patient by ID' })
+    // @UseGuards(JwtAuthGuard)
+    // async get(@Param('id', ParseIntPipe) id: number, @GetUser() user: Patient){
+    //     try {
+    //         const patient = await this.patientService.findOne(id);
+    //         if(patient.id !== user.id) {
+    //             throw new UnauthorizedException('You cannot access this resource');
+    //         }
+    //     } catch (error) {
+    //         throw new NotFoundException(error.message);
+    //     }   
+    // }
+
     @Get(':id')
     @ApiOperation({ summary: 'Find a patient by ID' })
     get(@Param('id', ParseIntPipe) id: number){
         try {
-            return this.patientService.findOne(id);    
+            return this.patientService.findOne(id);
         } catch (error) {
             throw new NotFoundException(error.message);
-        }   
+        }
+    }
+
+    @Get('email/:email')
+    @ApiOperation({ summary: 'Find a patient by email' })
+    getByEmail(@Param('email') email: string){
+        try {
+            return this.patientService.findByEmail(email);
+        } catch (error) {
+            throw new NotFoundException(error.message);
+        }
     }
 
     @Post()

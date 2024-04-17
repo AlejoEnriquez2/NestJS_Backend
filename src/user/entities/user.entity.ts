@@ -1,3 +1,4 @@
+import * as bcrypt from 'bcrypt';
 import {
     Entity,
     Column,
@@ -6,6 +7,7 @@ import {
     UpdateDateColumn,
     OneToOne,
     JoinColumn,
+    BeforeInsert,
   } from 'typeorm';
   
   export abstract class User {
@@ -20,6 +22,12 @@ import {
   
     @Column({ type: 'varchar', length: 255 })
     password?: string; // should encript
+
+    @BeforeInsert()
+    async hashPassword(){
+      const salt = await bcrypt.genSalt();
+      this.password = await bcrypt.hash(this.password, salt);
+    }
 
     @Column({ type: 'date', default: null})
     isDeleted: Date;

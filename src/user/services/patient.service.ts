@@ -23,6 +23,15 @@ export class PatientService {
         return patient;
     }
 
+    async findByEmail(email: string): Promise<Patient>{
+        const patient = await this.patientRepository.findOne({ where: { email } });
+        if(!patient){
+            throw new NotFoundException(`Patient with email ${email} not found`);
+        }
+        return patient;
+    }
+
+
     create(data: PatientDto){
         const newPatient = this.patientRepository.create(data);
         return this.patientRepository.save(newPatient);
