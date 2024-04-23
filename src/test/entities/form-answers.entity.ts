@@ -52,6 +52,9 @@ export class FormAnswers{
     @Column({type: 'varchar', length: 50})
     memoryPhrase: string;
 
+    @Column({type: 'varchar', length: 50, nullable: true})
+    grading_draw: string;
+
     // RELATIONS //
     @OneToOne(() => Form)
     @JoinColumn({name: 'formId'})

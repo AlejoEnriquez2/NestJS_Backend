@@ -17,10 +17,13 @@ import { FormAnswersController } from './controllers/form-answers.controller';
 import { UserAnswersController } from './controllers/user-answers.controller';
 import { PatientService } from 'src/user/services/patient.service';
 import { FormAnswers } from './entities/form-answers.entity';
+import { ImageProcessingService } from './services/image-processing.service';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Test, UserAnswers, Form, Patient, FormAnswers])], 
+  imports: [TypeOrmModule.forFeature([Test, UserAnswers, Form, Patient, FormAnswers]), HttpModule], 
   controllers: [TestController, FormController, UserAnswersController, FormAnswersController],
-  providers: [TestService, FormService, UserAnswersService, FormAnswersService, PatientService]
+  providers: [TestService, FormService, UserAnswersService, FormAnswersService, PatientService, ImageProcessingService],
+  exports: [ImageProcessingService]
 })
 export class TestModule {}

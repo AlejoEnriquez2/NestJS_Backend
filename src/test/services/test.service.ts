@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Readable } from 'stream';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Test } from '../entities/test.entity';
 import { Repository } from 'typeorm';
@@ -9,6 +10,7 @@ import { CreateTestDto, UpdateTestDto } from '../dtos/test.dto';
 import { PatientService } from 'src/user/services/patient.service';
 import { UserAnswersService } from './user-answers.service';
 import { FormService } from './form.service';
+import { ImageProcessingService } from './image-processing.service';
 
 @Injectable()
 export class TestService {
@@ -17,6 +19,7 @@ export class TestService {
         private userAnswersService: UserAnswersService,
         private formService: FormService,
         private patientService: PatientService,
+        private imageProcessingService: ImageProcessingService,
         // @InjectRepository(UserAnswers) private userAnswersRepository: Repository<UserAnswers>,
         // @InjectRepository(Form) private formRepository: Repository<Form>,
         // @InjectRepository(Patient) private patientRepository: Repository<Patient>,
@@ -28,17 +31,26 @@ export class TestService {
 
     async findOne(id: number): Promise<Test>{
         const test = await this.testRepository.findOne(id);
+        var userAnswers = new UserAnswers();
         if (!test) {
             throw new NotFoundException(`Test #${id} not found`);
         }
+        userAnswers = await this.userAnswersService.findOne(20);
+        // await this.imageProcessingService.processImage(Buffer.from(userAnswers.constructionsRedraw));
+        await this.imageProcessingService.processImage(userAnswers.constructionsRedraw);
         return test;
     }
 
     async create(test: CreateTestDto): Promise<Test>{
         const newTest = await this.testRepository.create(test);
+        var userAnswers = new UserAnswers();
         if (test.answersId) {
-            const userAnswers = await this.userAnswersService.findOne(test.answersId);
+            userAnswers = await this.userAnswersService.findOne(test.answersId);
             newTest.answers = userAnswers;
+            // const bufferStream = new Readable();
+            // bufferStream.push(userAnswers.constructionsDraw);
+            // bufferStream.push(null);
+            // await this.imageProcessingService.processImage(userAnswers.constructionsRedraw);
         }
         if (test.formId) {
             const form = await this.formService.findOne(test.formId);
@@ -47,7 +59,7 @@ export class TestService {
         if (test.patientId) {
             const patient = await this.patientService.findOne(test.patientId);
             newTest.patient = patient;
-        }                
+        }                        
         return this.testRepository.save(newTest);
     }
 

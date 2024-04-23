@@ -23,6 +23,7 @@ export class UserAnswersService {
     }
 
     create(createUserAnswersDto: CreateUserAnswersDto): Promise<UserAnswers>{
+        console.log(Buffer.from(createUserAnswersDto.constructionsRedraw));
         const constructionsDraw = Array.from(Buffer.from(createUserAnswersDto.constructionsDraw));
         const constructionsRedraw = Array.from(Buffer.from(createUserAnswersDto.constructionsRedraw));
         const executiveDraw = Array.from(Buffer.from(createUserAnswersDto.executiveDraw));
