@@ -1,5 +1,5 @@
 import { ApiProperty, PartialType } from "@nestjs/swagger";
-import { IsArray, IsNotEmpty } from "class-validator";
+import { IsArray, IsNotEmpty, IsOptional } from "class-validator";
 
 
 export class CreateUserAnswersDto {
@@ -39,12 +39,12 @@ export class CreateUserAnswersDto {
     @IsNotEmpty()
     @IsArray()
     @ApiProperty({ description: 'The user`s answer of the redrawn picture'})
-    constructionsRedraw: number[];
+    constructionsRedraw: string[];
 
     @IsNotEmpty()
     @IsArray()
     @ApiProperty({ description: 'The user`s answer of the drawn picture'})
-    constructionsDraw: number[];
+    constructionsDraw: string[];
 
     @IsNotEmpty()
     @ApiProperty({ description: 'The list of words that can be a user answered'})
@@ -61,13 +61,13 @@ export class CreateUserAnswersDto {
     @IsNotEmpty()
     @IsArray()
     @ApiProperty({ description: 'The lines the user selected'})
-    executiveLinesDraw: number[];
+    executiveLinesDraw: string[];    
 
 
     @IsNotEmpty()
     @IsArray()
     @ApiProperty({ description: 'The user`s drawing of the executive part'})
-    executiveDraw: number[];
+    executiveDraw: string[];
 
     @IsNotEmpty()
     @ApiProperty({ description: 'The user`s answer of the memory final phrase'})

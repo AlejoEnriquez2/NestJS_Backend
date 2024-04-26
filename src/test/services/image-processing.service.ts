@@ -6,19 +6,15 @@ import { lastValueFrom } from "rxjs";
 @Injectable()
 export class ImageProcessingService {
     constructor(
-        private httpService: HttpService,
-        private userAnswersService: UserAnswersService
+        private httpService: HttpService,        
     ) {}
 
-    async processImage(image_buffer: Buffer): Promise<any> {
+    async processCubeDraw(base64Image: string): Promise<any> {
         console.log('Processing image...');
-        
-        // Convert buffer to an array of integers
-        const imageArray = Array.from(image_buffer);
 
         try {
-            const response = await lastValueFrom(this.httpService.post('http://localhost:5000/recognizer', {
-                image: imageArray
+            const response = await lastValueFrom(this.httpService.post('http://localhost:5000/draw_recognizer', {
+                image: base64Image
             }, {
                 headers: {
                     'Content-Type': 'application/json',
@@ -28,6 +24,25 @@ export class ImageProcessingService {
             console.log(response.data);
             return response.data;
         } catch (error) {
+            console.error('Error sending image data to API:', error);
+            throw error;
+        }
+    }
+
+    async processExecutiveDraw(base64: string): Promise<any>{
+        console.log('Processing Executive image...');
+        try {
+            const response = await lastValueFrom(this.httpService.post('http://localhost:5000/executive_recognizer', {
+                image: base64
+            }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }));
+            
+            console.log(response.data);
+            return response.data;
+        }catch (error) {
             console.error('Error sending image data to API:', error);
             throw error;
         }

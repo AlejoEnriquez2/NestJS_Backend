@@ -3,11 +3,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UserAnswers } from '../entities/user-answers.entity';
 import { Repository } from 'typeorm';
 import { CreateUserAnswersDto, UpdateUserAnswersDto } from '../dtos/user-answers.dto';
+import { ImageProcessingService } from './image-processing.service';
 
 @Injectable()
 export class UserAnswersService {
     constructor(
         @InjectRepository(UserAnswers) private userAnswersRepository: Repository<UserAnswers>,
+        private imageProcessingService: ImageProcessingService,
     ) {}
 
     findAll(): Promise<UserAnswers[]>{
@@ -22,19 +24,16 @@ export class UserAnswersService {
         return userAnswers;
     }
 
-    create(createUserAnswersDto: CreateUserAnswersDto): Promise<UserAnswers>{
-        console.log(Buffer.from(createUserAnswersDto.constructionsRedraw));
-        const constructionsDraw = Array.from(Buffer.from(createUserAnswersDto.constructionsDraw));
-        const constructionsRedraw = Array.from(Buffer.from(createUserAnswersDto.constructionsRedraw));
-        const executiveDraw = Array.from(Buffer.from(createUserAnswersDto.executiveDraw));
-        const executiveLinesDraw = Array.from(Buffer.from(createUserAnswersDto.executiveLinesDraw));
-        createUserAnswersDto.constructionsDraw = constructionsDraw;
-        createUserAnswersDto.constructionsRedraw = constructionsRedraw;
-        createUserAnswersDto.executiveDraw = executiveDraw;
-        createUserAnswersDto.executiveLinesDraw = executiveLinesDraw;
-        
+    async create(createUserAnswersDto: CreateUserAnswersDto): Promise<UserAnswers>{           
+        const response = await this.imageProcessingService.processExecutiveDraw(createUserAnswersDto.executiveDraw[0])
+        createUserAnswersDto.executiveDraw.push(response);   
         const userAnswers = this.userAnswersRepository.create(createUserAnswersDto);        
         return this.userAnswersRepository.save(userAnswers);
+    }
+
+    async gradeTest(createUserAnswersDto: CreateUserAnswersDto){
+        const response = await this.imageProcessingService.processCubeDraw(createUserAnswersDto.constructionsRedraw[0])
+        createUserAnswersDto.constructionsRedraw.push(response);
     }
 
     async update(id: number, changes: UpdateUserAnswersDto){

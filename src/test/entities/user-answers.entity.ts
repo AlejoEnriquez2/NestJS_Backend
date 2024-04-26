@@ -31,11 +31,11 @@ export class UserAnswers {
     @Column({type: 'float'})
     calculation2: number;
 
-    @Column({type: 'bytea'})
-    constructionsRedraw: Buffer;
+    @Column({type: 'varchar'})
+    constructionsRedraw: string[];
 
-    @Column({type: 'bytea'})
-    constructionsDraw: Buffer;
+    @Column({type: 'varchar'})
+    constructionsDraw: string[];
 
     @Column({type: 'varchar', length: 500})
     verbalWords: string[];
@@ -46,15 +46,15 @@ export class UserAnswers {
     @Column({type: 'varchar', length: 50})
     executiveLines: string;
 
-    @Column({type: 'bytea'})
-    executiveLinesDraw: Buffer;
+    @Column({type: 'varchar'})
+    executiveLinesDraw: string[];
 
-    @Column({type: 'bytea'})
-    executiveDraw: Buffer;
+    @Column({type: 'varchar'})
+    executiveDraw: string[];
 
     @Column({type: 'varchar', length: 50})
     memoryPhrase: string;
-
+    
     // TABLE FUNCTIONS //
 
     @CreateDateColumn({

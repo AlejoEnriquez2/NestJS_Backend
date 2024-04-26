@@ -4,8 +4,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Test } from '../entities/test.entity';
 import { Repository } from 'typeorm';
 import { UserAnswers } from '../entities/user-answers.entity';
-import { Form } from '../entities/form.entity';
-import { Patient } from 'src/user/entities/patient.entity';
 import { CreateTestDto, UpdateTestDto } from '../dtos/test.dto';
 import { PatientService } from 'src/user/services/patient.service';
 import { UserAnswersService } from './user-answers.service';
@@ -19,7 +17,7 @@ export class TestService {
         private userAnswersService: UserAnswersService,
         private formService: FormService,
         private patientService: PatientService,
-        private imageProcessingService: ImageProcessingService,
+        // private imageProcessingService: ImageProcessingService,
         // @InjectRepository(UserAnswers) private userAnswersRepository: Repository<UserAnswers>,
         // @InjectRepository(Form) private formRepository: Repository<Form>,
         // @InjectRepository(Patient) private patientRepository: Repository<Patient>,
@@ -35,9 +33,14 @@ export class TestService {
         if (!test) {
             throw new NotFoundException(`Test #${id} not found`);
         }
-        userAnswers = await this.userAnswersService.findOne(20);
+        userAnswers = await this.userAnswersService.findOne(30);
+        console.log("Should be the base64 Image: "+userAnswers.constructionsRedraw)
+        // var response = await this.imageProcessingService.processImage(userAnswers.constructionsRedraw);   
+        // console.log(response.type);
+        // console.log(userAnswers.constructionsRedraw);
+        
         // await this.imageProcessingService.processImage(Buffer.from(userAnswers.constructionsRedraw));
-        await this.imageProcessingService.processImage(userAnswers.constructionsRedraw);
+        // await this.imageProcessingService.processImage(userAnswers.constructionsRedraw);
         return test;
     }
 
@@ -45,7 +48,12 @@ export class TestService {
         const newTest = await this.testRepository.create(test);
         var userAnswers = new UserAnswers();
         if (test.answersId) {
-            userAnswers = await this.userAnswersService.findOne(test.answersId);
+            userAnswers = await this.userAnswersService.findOne(test.answersId);            
+            // var response = await this.imageProcessingService.processImage(userAnswers.constructionsRedraw);                        
+            // userAnswers.gradingRedraw = response;
+            // console.log('Saving grading...');
+            // console.log(userAnswers.gradingRedraw);
+            // this.userAnswersService.update(userAnswers.answersId, userAnswers);
             newTest.answers = userAnswers;
             // const bufferStream = new Readable();
             // bufferStream.push(userAnswers.constructionsDraw);
