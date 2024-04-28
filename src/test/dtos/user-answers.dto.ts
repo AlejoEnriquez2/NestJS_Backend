@@ -30,11 +30,11 @@ export class CreateUserAnswersDto {
 
     @IsNotEmpty()
     @ApiProperty({ description: 'The user`s answer of the first calculation'})
-    calculation1: number;
+    calculation1: string;
 
     @IsNotEmpty()
     @ApiProperty({ description: 'The user`s answer of the second calculation'})
-    calculation2: number;
+    calculation2: string;
 
     @IsNotEmpty()
     @IsArray()

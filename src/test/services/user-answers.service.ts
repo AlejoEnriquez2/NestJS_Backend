@@ -7,6 +7,7 @@ import { ImageProcessingService } from './image-processing.service';
 import * as natural from 'natural';
 import { Nodehun } from 'nodehun'
 import * as fs from 'fs';
+import * as csv from 'csv-parser';
 
 const affix = fs.readFileSync('src/dictionaries/en_US.aff');
 const dictionary = fs.readFileSync('src/dictionaries/en_US.dic');
@@ -45,8 +46,18 @@ export class UserAnswersService {
 
     async gradeTest(createUserAnswersDto: CreateUserAnswersDto){     
         var grade = 0; 
-        var dateGrade = await this.gradeDate(createUserAnswersDto);
+        var dateGrade = await this.gradeDate(createUserAnswersDto);        
         var namingGrade = this.gradeNaming(createUserAnswersDto.namingPicture1, createUserAnswersDto.namingPicture2);        
+        createUserAnswersDto.namingPicture1 = createUserAnswersDto.namingPicture1 + (await namingGrade).responseName1;
+        createUserAnswersDto.namingPicture2 = createUserAnswersDto.namingPicture2 + (await namingGrade).responseName2;
+        var similaritiesGrade = await this.gradeSimilarities(createUserAnswersDto.similarities);
+        var calculationGrade = await this.gradeCalculation(parseFloat(createUserAnswersDto.calculation1), parseFloat(createUserAnswersDto.calculation2));
+        grade = grade + calculationGrade.grade;
+        createUserAnswersDto.calculation1 = createUserAnswersDto.calculation1 + calculationGrade.grade1;
+        createUserAnswersDto.calculation2 = createUserAnswersDto.calculation2 + calculationGrade.grade2;
+        var verbalWordsGrade = await this.gradeWords(createUserAnswersDto.verbalWords.toString());
+        console.log(await verbalWordsGrade);
+
 
         if(dateGrade === 3){
             grade++;
@@ -54,20 +65,29 @@ export class UserAnswersService {
         if((await namingGrade).grade === 2){
             grade++;
         }
-        
-        return grade;
-        
+        if(similaritiesGrade === 2){
+            grade++;
+            createUserAnswersDto.similarities = createUserAnswersDto.similarities + '|correct';
+        }else if(similaritiesGrade === 1){
+            createUserAnswersDto.similarities = createUserAnswersDto.similarities + '|half-correct';
+        }else{
+            createUserAnswersDto.similarities = createUserAnswersDto.similarities + '|incorrect';
+        }
+
         // var cube = createUserAnswersDto.constructionsRedraw;
         // console.log(cube);
-        // // cube = cube.toString().substring(2, cube.length-2).split(',');        
+        // cube = cube.toString().substring(2, cube.length-2).split(',');        
         // const responseCube = await this.imageProcessingService.processCubeDraw(cube[0]);
         // createUserAnswersDto.constructionsRedraw = [...cube, responseCube];
+        
+        
+        return createUserAnswersDto;
+        
         
         // var executive = createUserAnswersDto.executiveDraw;
         // // executive = executive.toString().substring(2, executive.length-2).split(',');
         // const responseExecutive = await this.imageProcessingService.processExecutiveDraw(executive[0]);
         // createUserAnswersDto.executiveDraw = [...executive, responseExecutive];
-
         // return {responseCube, responseExecutive};
     }
 
@@ -129,15 +149,15 @@ export class UserAnswersService {
                 for (const detail of details){
                     if (detail.synonyms.includes(fixed1)) {
                         grade++;
-                        console.log("GRADE: " + grade + " - " + fixed1 + " it can be similar as " + detail.synonyms);
+                        // console.log("GRADE: " + grade + " - " + fixed1 + " it can be similar as " + detail.synonyms);
                         if(fixed1 != name1){
-                            responseName1 = '|correct|' +  fixed1 + '|' + detail.synonyms.toString();
+                            responseName1 = '|correct|*' +  fixed1 + '|' + detail.synonyms.toString();
                         }else{
                             responseName1 = '|correct|' + detail.synonyms.toString();
                         }
                         break;
                     }else{
-                        console.log(fixed1 + " it is NOT similar to " + detail.synonyms);                          
+                        // console.log(fixed1 + " it is NOT similar to " + detail.synonyms);                          
                         responseName1 = '|incorrect';
                     }                            
                 }      
@@ -150,15 +170,15 @@ export class UserAnswersService {
                 for (const detail of details){
                     if (detail.synonyms.includes(fixed2)) {
                         grade++;
-                        console.log("GRADE: " + grade + " - " + fixed2 + " it can be similar as " + detail.synonyms);
+                        // console.log("GRADE: " + grade + " - " + fixed2 + " it can be similar as " + detail.synonyms);
                         if(fixed2 != name1){
-                            responseName2 = '|correct|' +  fixed2 + '|' + detail.synonyms.toString();
+                            responseName2 = '|correct|*' +  fixed2 + '|' + detail.synonyms.toString();
                         }else{
                             responseName2 = '|correct|' + detail.synonyms.toString();
                         }
                         break;
                     }else{
-                        console.log(fixed2 + " it is NOT similar to " + detail.synonyms);                          
+                        // console.log(fixed2 + " it is NOT similar to " + detail.synonyms);                          
                         responseName2 = '|incorrect';
                     }                            
                 }      
@@ -166,8 +186,74 @@ export class UserAnswersService {
             });
         });
 
-        console.log(grade);
+        // console.log(grade);
         return {grade, responseName1, responseName2};
+    }
+
+    async gradeSimilarities(similarities: string){
+        var grade = 0;
+        const stemmer = natural.PorterStemmer;
+        const tokenizer = new natural.WordTokenizer();
+        const abstractKeywords = ['concept', 'function', 'abstract', 'measure', 'idea', 'measuring', 'measures', 'checking'];
+        const concreteKeywords = ['attribute', 'markings', 'object', 'tangible', 'concrete', 'physical', 'details', 'number', 'numeric'];
+
+        const tokens = tokenizer.tokenize(similarities.toLowerCase());
+        // console.log(tokens);
+        var fixedWords = [];
+        const stemmedTokens = tokens.map(token => stemmer.stem(token));
+        // console.log('STEMMED TOKENS: ', stemmedTokens);
+
+        for (const element of stemmedTokens){
+            const correctedWord = await this.correctSpelling(element);            
+            fixedWords.push(correctedWord);
+            // console.log(fixedWords);
+        }
+
+        const abstractScore = (fixedWords).filter(token => abstractKeywords.includes(token)).length;
+        const concreteScore = (fixedWords).filter(token => concreteKeywords.includes(token)).length;
+
+        console.log('ABSTRACT: '+ abstractScore + ' - CONCRETE: ' + concreteScore);
+
+        if(abstractScore > concreteScore){
+            grade = 2;
+        }else if(concreteScore > 0){
+            grade = 1;
+        }
+        return grade;
+    }
+
+    gradeCalculation(calculation1: number, calculation2: number){
+        var grade = 0;
+        var grade1 = '';
+        var grade2 = '';
+        if (calculation1 == 12){
+            grade++;
+            grade1 = '|correct';
+        }else{
+            grade1 = '|incorrect';
+        }
+        if(calculation2 == 6.55){
+            grade++;
+            grade2 = '|correct';
+        }else{
+            grade2 = '|incorrect';
+        }
+        return {grade, grade1, grade2};
+    }
+
+    async gradeWords(words: string){
+        // var array = words.substring(2, words.length-2).split('",');
+        var array = words.substring(2, words.length-2).split(',').map(word => word.replace(/"/g, ''));        
+        var grade = 0;
+        var animals = await this.getAnimals();
+        for (const word of array){
+            var fixedWord = this.correctSpelling(word);
+            if(animals.includes(word)){
+                console.log("Includes: " + word);
+                grade++;
+            }
+        }
+        return grade;
     }
 
     async correctSpelling(word: string){
@@ -181,6 +267,18 @@ export class UserAnswersService {
         }
     }
 
+    async getAnimals(): Promise<string[]> {
+        return new Promise((resolve, reject) => {
+            fs.readFile('src/dictionaries/lowercase_animals.csv', 'utf8', (err, data) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    const animals = data.split(',');
+                    resolve(animals);
+                }
+            });
+        });
+    }
 
 }
 

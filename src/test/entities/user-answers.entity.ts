@@ -16,20 +16,20 @@ export class UserAnswers {
     @Column({type: 'varchar', length: 15})
     orientationYear: string;
 
-    @Column({type: 'varchar', length: 50})
+    @Column({type: 'varchar', length: 100})
     namingPicture1: string;
 
-    @Column({type: 'varchar', length: 50})
+    @Column({type: 'varchar', length: 100})
     namingPicture2: string;
 
     @Column({type: 'varchar', length: 255})
     similarities: string;
 
-    @Column({type: 'float'})
-    calculation1: number;
+    @Column({type: 'varchar', length: 100})
+    calculation1: string;
 
-    @Column({type: 'float'})
-    calculation2: number;
+    @Column({type: 'varchar'})
+    calculation2: string;
 
     @Column({type: 'varchar'})
     constructionsRedraw: string[];
