@@ -23,6 +23,16 @@ export class UserAnswersController {
         }
     }
 
+    @Get('grade/:userAnswersId')
+    async getGrade(@Param('userAnswersId', ParseIntPipe) userAnswersId:number){
+        try {
+            const userAnswers = this.userAnswersService.findOne(userAnswersId);
+            return this.userAnswersService.gradeTest(await userAnswers);
+        } catch (error) {
+            throw new NotFoundException(error.message);
+        }
+    }
+
     @Post()
     async create(@Body() payload: CreateUserAnswersDto){
         const answers = await this.userAnswersService.create(payload);
