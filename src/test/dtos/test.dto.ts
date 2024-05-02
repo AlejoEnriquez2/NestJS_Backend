@@ -5,7 +5,7 @@ export class CreateTestDto {
 
     @IsNotEmpty()
     @ApiProperty({ description: 'The date the Test was taken' })
-    testDate: string;
+    testDate: Date;
 
     @IsNotEmpty()
     @IsPositive()
@@ -21,9 +21,8 @@ export class CreateTestDto {
     patientName: string;
 
     @IsNotEmpty()
-    @IsDate()
     @ApiProperty({ description: 'The birthday of the Patient' })
-    patientBirthday: Date;
+    patientBirthday: string;
 
     @IsNotEmpty()
     @ApiProperty({ description: 'The education level of the Patient' })

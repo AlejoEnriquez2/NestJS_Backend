@@ -9,8 +9,8 @@ export class Test{
     @PrimaryGeneratedColumn()
     testId: number;
 
-    @Column({type: 'varchar'})
-    testDate: string;
+    @Column({type: 'date'})
+    testDate: Date;
 
     @Column({type: 'int'})
     testTotalTime: number;
@@ -21,8 +21,8 @@ export class Test{
     @Column({type: 'varchar', length: 255})
     patientName: string;
 
-    @Column({type: 'date'})
-    patientBirthday: Date;
+    @Column({type: 'varchar'})
+    patientBirthday: string;
 
     @Column({type: 'varchar', length: 255})
     patientEducation: string;

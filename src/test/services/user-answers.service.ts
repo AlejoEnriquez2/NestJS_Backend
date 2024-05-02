@@ -88,58 +88,63 @@ export class UserAnswersService {
             createUserAnswersDto.similarities = createUserAnswersDto.similarities + '|incorrect';
         }
 
-        var cube = createUserAnswersDto.constructionsRedraw;
-        console.log("RESPONSE CUBE: " + cube[0])
-        if(cube[0].length == 1){
-            cube = cube.toString().substring(2, cube.length-2).split(',');
-        }
-        const responseCube = await this.imageProcessingService.processCubeDraw(cube[0]);
-        createUserAnswersDto.constructionsRedraw = [...cube, responseCube];
-        if(responseCube.isCube == 'yes'){
-            console.log(responseCube.isCube);
-            constructionRedraw = 2;
-        }else if(responseCube.isCube == 'maybe'){
-            console.log(responseCube.isCube);
-            constructionRedraw = 1;
-        }else if(responseCube.isCube == 'no'){
-            console.log(responseCube.isCube);
+        var cube = createUserAnswersDto.constructionsRedraw;          
+        if(cube.length != 0){
+            if(cube[0].length == 1){
+                cube = cube.toString().substring(2, cube.length-2).split(',');
+            }
+
+            const responseCube = await this.imageProcessingService.processCubeDraw(cube[0]);
+            createUserAnswersDto.constructionsRedraw = [...cube, responseCube];
+            if(responseCube.isCube == 'yes'){
+                console.log(responseCube.isCube);
+                constructionRedraw = 2;
+            }else if(responseCube.isCube == 'maybe'){
+                console.log(responseCube.isCube);
+                constructionRedraw = 1;
+            }else if(responseCube.isCube == 'no'){
+                console.log(responseCube.isCube);
+                constructionRedraw = 0;
+            }
+            
+        }else{
             constructionRedraw = 0;
         }
-        
-        
         // try {
             // var words = createUserAnswersDto.verbalWords.toString().substring(2, createUserAnswersDto.verbalWords.length-2).split(',').map(word => word.replace(/"/g, ''));
             // console.log("WORDS LENGTH 1: "+words.length);
         
         console.log("WORDS GRADE: " + createUserAnswersDto.verbalWords[0]);
-        if(createUserAnswersDto.verbalWords[0].length == 1){
-            console.log("CREATING VARIABLE WORDS");
-            var words = createUserAnswersDto.verbalWords.toString().substring(2, createUserAnswersDto.verbalWords.length-2).split(',').map(word => word.replace(/"/g, ''));
-        }
-
-        if(typeof createUserAnswersDto.verbalWords === 'string'){
-            if((await verbalWordsResponse) === 12){
-                verbal = 2;
-                words.push('|correct');
-                createUserAnswersDto.verbalWords = words;
-            }else if((await verbalWordsResponse) >= 10){
-                verbal = 1;
-                words.push('|half-correct');
-                createUserAnswersDto.verbalWords = words;
-            }else{
-                verbal = 0;
-                words.push('|incorrect');
-                createUserAnswersDto.verbalWords = words;
+        if(createUserAnswersDto.verbalWords.length != 0){
+            if(createUserAnswersDto.verbalWords[0].length == 1){
+                console.log("CREATING VARIABLE WORDS");
+                var words = createUserAnswersDto.verbalWords.toString().substring(2, createUserAnswersDto.verbalWords.length-2).split(',').map(word => word.replace(/"/g, ''));
             }
-        }else{
-            if((await verbalWordsResponse) === 12){
-                verbal = 2;                
-                createUserAnswersDto.verbalWords.push('|correct');
-            }else if((await verbalWordsResponse) >= 10){
-                verbal = 1;            
-                createUserAnswersDto.verbalWords.push('|half-correct');
-            }else{                
-                createUserAnswersDto.verbalWords.push('|incorrect');
+
+            if(typeof createUserAnswersDto.verbalWords === 'string'){
+                if((await verbalWordsResponse) === 12){
+                    verbal = 2;
+                    words.push('|correct');
+                    createUserAnswersDto.verbalWords = words;
+                }else if((await verbalWordsResponse) >= 10){
+                    verbal = 1;
+                    words.push('|half-correct');
+                    createUserAnswersDto.verbalWords = words;
+                }else{
+                    verbal = 0;
+                    words.push('|incorrect');
+                    createUserAnswersDto.verbalWords = words;
+                }
+            }else{
+                if((await verbalWordsResponse) === 12){
+                    verbal = 2;                
+                    createUserAnswersDto.verbalWords.push('|correct');
+                }else if((await verbalWordsResponse) >= 10){
+                    verbal = 1;            
+                    createUserAnswersDto.verbalWords.push('|half-correct');
+                }else{                
+                    createUserAnswersDto.verbalWords.push('|incorrect');
+                }
             }
         }
         // } catch (error) {
@@ -192,21 +197,22 @@ export class UserAnswersService {
         
         
         var executive = createUserAnswersDto.executiveDraw;
-        console.log("RESPONSE CUBE: " + executive[0])
-        if(executive[0].length == 1){
-            executive = executive.toString().substring(2, executive.length-2).split(',');
+        if(executive.length != 0){    
+            console.log("RESPONSE CUBE: " + executive[0])
+            if(executive[0].length == 1){
+                executive = executive.toString().substring(2, executive.length-2).split(',');
+            }
+            // executive = executive.toString().substring(2, executive.length-2).split(',');
+            const responseExecutive = await this.imageProcessingService.processExecutiveDraw(executive[0]);
+            createUserAnswersDto.executiveDraw = [...executive, responseExecutive];
+            if(responseExecutive.isSimilar == 'yes'){
+                console.log(responseExecutive.isSimilar);
+                executiveLinesDraw++;
+            }else if(responseExecutive.isCorrect == 'no'){
+                console.log(responseExecutive.isSimilar);
+                executiveLinesDraw++;
+            }        
         }
-        // executive = executive.toString().substring(2, executive.length-2).split(',');
-        const responseExecutive = await this.imageProcessingService.processExecutiveDraw(executive[0]);
-        createUserAnswersDto.executiveDraw = [...executive, responseExecutive];
-        if(responseExecutive.isSimilar == 'yes'){
-            console.log(responseExecutive.isSimilar);
-            executiveLinesDraw++;
-        }else if(responseExecutive.isCorrect == 'no'){
-            console.log(responseExecutive.isSimilar);
-            executiveLinesDraw++;
-        }        
-
 
         console.log("#######");
         console.log("Orientation: "+orientation);
@@ -395,22 +401,27 @@ export class UserAnswersService {
         return {grade, grade1, grade2};
     }
 
-    async gradeWords(words: string[]){        
-        if(words[0].length == 1){
-            words = words.toString().substring(2, words.length-2).split(',').map(word => word.replace(/"/g, ''));
-        }
-        
-        var grade = 0;
-        var animals = await this.getAnimals();
-        for (const word of words){
-            var fixedWord = await this.correctSpellingContext(word, 'animals');
-            console.log(fixedWord);
-            if(animals.some(async animal => animal.includes(await fixedWord))){
-                grade++;
-                console.log("Includes: " + word + " | Grade: " + grade);
+    async gradeWords(words: string[]){
+        console.log("WORDS EMPTY: " + typeof words);
+        console.log("WORDS EMPTY: " + words);
+        if(words.length != 0){
+            if(words[0].length == 1){
+                words = words.toString().substring(2, words.length-2).split(',').map(word => word.replace(/"/g, ''));
             }
+            
+            var grade = 0;
+            var animals = await this.getAnimals();
+            for (const word of words){
+                var fixedWord = await this.correctSpellingContext(word, 'animals');
+                console.log(fixedWord);
+                if(animals.some(async animal => animal.includes(await fixedWord))){
+                    grade++;
+                    console.log("Includes: " + word + " | Grade: " + grade);
+                }
+            }
+            return grade;
         }
-        return grade;
+        return 0;
     }
 
     gradeTrail(trail: string){        
@@ -506,7 +517,7 @@ export class UserAnswersService {
                 }
             });
         });
-    }
+    }    
 
 }
 
