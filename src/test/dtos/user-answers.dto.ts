@@ -47,6 +47,7 @@ export class CreateUserAnswersDto {
     constructionsDraw: string[];
 
     @IsNotEmpty()
+    @IsArray()
     @ApiProperty({ description: 'The list of words that can be a user answered'})
     verbalWords: string[];
 

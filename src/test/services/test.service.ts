@@ -48,17 +48,8 @@ export class TestService {
         const newTest = await this.testRepository.create(test);
         var userAnswers = new UserAnswers();
         if (test.answersId) {
-            userAnswers = await this.userAnswersService.findOne(test.answersId);            
-            // var response = await this.imageProcessingService.processImage(userAnswers.constructionsRedraw);                        
-            // userAnswers.gradingRedraw = response;
-            // console.log('Saving grading...');
-            // console.log(userAnswers.gradingRedraw);
-            // this.userAnswersService.update(userAnswers.answersId, userAnswers);
+            userAnswers = await this.userAnswersService.findOne(test.answersId);
             newTest.answers = userAnswers;
-            // const bufferStream = new Readable();
-            // bufferStream.push(userAnswers.constructionsDraw);
-            // bufferStream.push(null);
-            // await this.imageProcessingService.processImage(userAnswers.constructionsRedraw);
         }
         if (test.formId) {
             const form = await this.formService.findOne(test.formId);

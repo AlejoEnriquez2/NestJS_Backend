@@ -30,65 +30,215 @@ export class UserAnswersService {
         if (!userAnswers) {
             throw new NotFoundException(`UserAnswers #${id} not found`);
         }
+        
+        // const userAnswersGraded = await this.gradeTest(userAnswers);
+        // this.userAnswersRepository.update(userAnswers.answersId, userAnswersGraded.createUserAnswersDto);
+
         return userAnswers;
     }
 
     async create(createUserAnswersDto: CreateUserAnswersDto): Promise<UserAnswers>{
         const userAnswers = this.userAnswersRepository.create(createUserAnswersDto);
+        
         const savedUserAnswers = await this.userAnswersRepository.save(userAnswers);
-
-        this.gradeTest(createUserAnswersDto).catch(error => {
-            console.error('Error grading test:', error);
-        });
+        
+        const userAnswersGraded = await this.gradeTest(userAnswers);
+        this.userAnswersRepository.update(userAnswers.answersId, userAnswersGraded.createUserAnswersDto);
 
         return savedUserAnswers;
     }
 
     async gradeTest(createUserAnswersDto: CreateUserAnswersDto){     
-        var grade = 0; 
-        var dateGrade = await this.gradeDate(createUserAnswersDto);        
-        var namingGrade = this.gradeNaming(createUserAnswersDto.namingPicture1, createUserAnswersDto.namingPicture2);        
-        createUserAnswersDto.namingPicture1 = createUserAnswersDto.namingPicture1 + (await namingGrade).responseName1;
-        createUserAnswersDto.namingPicture2 = createUserAnswersDto.namingPicture2 + (await namingGrade).responseName2;
-        var similaritiesGrade = await this.gradeSimilarities(createUserAnswersDto.similarities);
-        var calculationGrade = await this.gradeCalculation(parseFloat(createUserAnswersDto.calculation1), parseFloat(createUserAnswersDto.calculation2));
-        grade = grade + calculationGrade.grade;
-        createUserAnswersDto.calculation1 = createUserAnswersDto.calculation1 + calculationGrade.grade1;
-        createUserAnswersDto.calculation2 = createUserAnswersDto.calculation2 + calculationGrade.grade2;
-        var verbalWordsGrade = await this.gradeWords(createUserAnswersDto.verbalWords.toString());
-        console.log(await verbalWordsGrade);
+        var grade = 0;                  // Total grade. Possible points: 22 
+        var orientation = 0;            // Day, month and year. Possible points: 4
+        var naming = 0;                 // Naming of the pictures. Possible points: 2 
+        var similarities = 0;           // Abstract or concrete. Possible points: 2
+        var calculation = 0;            // Calculations. Possible points: 2        
+        var constructionRedraw = 0;     // Redraw of the picture. Possible points: 2
+        var constructionDraw = 0;       // Draw of the clock. Possible points: 2
+        var verbal = 0;                 // Verbal fluency. Possible points: 2
+        var executiveTrail = 0;         // Trail executive. Possible points: 2
+        var executiveLinesDraw = 0;     // Matching the lines and draw. Possible points: 2
+        var memory = 0;                 // Memory phrase. Possible points: 2
 
 
-        if(dateGrade === 3){
-            grade++;
-        }
-        if((await namingGrade).grade === 2){
-            grade++;
-        }
-        if(similaritiesGrade === 2){
-            grade++;
+        orientation = await this.gradeDate(createUserAnswersDto);        
+        var namingResponse = await this.gradeNaming(createUserAnswersDto.namingPicture1, createUserAnswersDto.namingPicture2);        
+        var similaritiesResponse = await this.gradeSimilarities(createUserAnswersDto.similarities);
+        var calculationResponse = await this.gradeCalculation(parseFloat(createUserAnswersDto.calculation1), parseFloat(createUserAnswersDto.calculation2));        
+        var verbalWordsResponse = await this.gradeWords(createUserAnswersDto.verbalWords);
+        var trailResponse = this.gradeTrail(createUserAnswersDto.executiveTrail);
+        var memoryResponse = await this.memoryGrade(createUserAnswersDto.memoryPhrase);
+        
+        createUserAnswersDto.namingPicture1 = createUserAnswersDto.namingPicture1 + (await namingResponse).responseName1;
+        createUserAnswersDto.namingPicture2 = createUserAnswersDto.namingPicture2 + (await namingResponse).responseName2;
+        createUserAnswersDto.calculation1 = createUserAnswersDto.calculation1 + calculationResponse.grade1;
+        createUserAnswersDto.calculation2 = createUserAnswersDto.calculation2 + calculationResponse.grade2;
+        naming = (await namingResponse).grade;
+        calculation = (await calculationResponse).grade;
+        
+        if(similaritiesResponse === 2){
+            similarities = 2;
             createUserAnswersDto.similarities = createUserAnswersDto.similarities + '|correct';
-        }else if(similaritiesGrade === 1){
+        }else if(similaritiesResponse === 1){
             createUserAnswersDto.similarities = createUserAnswersDto.similarities + '|half-correct';
+            similarities = 1;
         }else{
+            similarities = 0;
             createUserAnswersDto.similarities = createUserAnswersDto.similarities + '|incorrect';
         }
 
-        // var cube = createUserAnswersDto.constructionsRedraw;
-        // console.log(cube);
-        // cube = cube.toString().substring(2, cube.length-2).split(',');        
-        // const responseCube = await this.imageProcessingService.processCubeDraw(cube[0]);
-        // createUserAnswersDto.constructionsRedraw = [...cube, responseCube];
+        var cube = createUserAnswersDto.constructionsRedraw;
+        console.log("RESPONSE CUBE: " + cube[0])
+        if(cube[0].length == 1){
+            cube = cube.toString().substring(2, cube.length-2).split(',');
+        }
+        const responseCube = await this.imageProcessingService.processCubeDraw(cube[0]);
+        createUserAnswersDto.constructionsRedraw = [...cube, responseCube];
+        if(responseCube.isCube == 'yes'){
+            console.log(responseCube.isCube);
+            constructionRedraw = 2;
+        }else if(responseCube.isCube == 'maybe'){
+            console.log(responseCube.isCube);
+            constructionRedraw = 1;
+        }else if(responseCube.isCube == 'no'){
+            console.log(responseCube.isCube);
+            constructionRedraw = 0;
+        }
         
         
-        return createUserAnswersDto;
+        // try {
+            // var words = createUserAnswersDto.verbalWords.toString().substring(2, createUserAnswersDto.verbalWords.length-2).split(',').map(word => word.replace(/"/g, ''));
+            // console.log("WORDS LENGTH 1: "+words.length);
+        
+        console.log("WORDS GRADE: " + createUserAnswersDto.verbalWords[0]);
+        if(createUserAnswersDto.verbalWords[0].length == 1){
+            console.log("CREATING VARIABLE WORDS");
+            var words = createUserAnswersDto.verbalWords.toString().substring(2, createUserAnswersDto.verbalWords.length-2).split(',').map(word => word.replace(/"/g, ''));
+        }
+
+        if(typeof createUserAnswersDto.verbalWords === 'string'){
+            if((await verbalWordsResponse) === 12){
+                verbal = 2;
+                words.push('|correct');
+                createUserAnswersDto.verbalWords = words;
+            }else if((await verbalWordsResponse) >= 10){
+                verbal = 1;
+                words.push('|half-correct');
+                createUserAnswersDto.verbalWords = words;
+            }else{
+                verbal = 0;
+                words.push('|incorrect');
+                createUserAnswersDto.verbalWords = words;
+            }
+        }else{
+            if((await verbalWordsResponse) === 12){
+                verbal = 2;                
+                createUserAnswersDto.verbalWords.push('|correct');
+            }else if((await verbalWordsResponse) >= 10){
+                verbal = 1;            
+                createUserAnswersDto.verbalWords.push('|half-correct');
+            }else{                
+                createUserAnswersDto.verbalWords.push('|incorrect');
+            }
+        }
+        // } catch (error) {
+        //     var words = createUserAnswersDto.verbalWords.toString().substring(2, createUserAnswersDto.verbalWords.length-2).split(',').map(word => word.replace(/"/g, ''));
+        //     console.log(words);
+        //     console.log("WORDS LENGTH 2: "+words.length);
+        //     if((await verbalWordsResponse) === 12){
+        //         verbal = 2;
+        //         words.push('|correct');
+        //         createUserAnswersDto.verbalWords = words;
+        //     }else if((await verbalWordsResponse) >= 10){
+        //         verbal = 1;
+        //         words.push('|half-correct');
+        //         createUserAnswersDto.verbalWords = words;
+        //     }else{
+        //         verbal = 0;
+        //         words.push('|incorrect');
+        //         createUserAnswersDto.verbalWords = words;
+        //     }
+        // }
+
+        if (trailResponse === 2){
+            executiveTrail = 2;
+            createUserAnswersDto.executiveTrail = createUserAnswersDto.executiveTrail + '|correct';
+        }else if(trailResponse === 1){
+            executiveTrail = 1;
+            createUserAnswersDto.executiveTrail = createUserAnswersDto.executiveTrail + '|half-correct';
+        }else{
+            executiveTrail = 0;
+            createUserAnswersDto.executiveTrail = createUserAnswersDto.executiveTrail + '|incorrect';
+        }
+        
+        if(parseInt(createUserAnswersDto.executiveLines) === 4){
+            executiveLinesDraw++;
+            createUserAnswersDto.executiveLines = createUserAnswersDto.executiveLines + '|correct';
+        }else{
+            createUserAnswersDto.executiveLines = createUserAnswersDto.executiveLines + '|incorrect';
+        }
+
+        if((await memoryResponse) === 2){
+            memory = 2;
+            createUserAnswersDto.memoryPhrase = createUserAnswersDto.memoryPhrase + '|correct';
+        }else if(await memoryResponse === 1){
+            memory = 1;
+            createUserAnswersDto.memoryPhrase = createUserAnswersDto.memoryPhrase + '|half-correct';
+        }else{
+            memory = 0;
+            createUserAnswersDto.memoryPhrase = createUserAnswersDto.memoryPhrase + '|incorrect';
+        }
         
         
-        // var executive = createUserAnswersDto.executiveDraw;
-        // // executive = executive.toString().substring(2, executive.length-2).split(',');
-        // const responseExecutive = await this.imageProcessingService.processExecutiveDraw(executive[0]);
-        // createUserAnswersDto.executiveDraw = [...executive, responseExecutive];
+        var executive = createUserAnswersDto.executiveDraw;
+        console.log("RESPONSE CUBE: " + executive[0])
+        if(executive[0].length == 1){
+            executive = executive.toString().substring(2, executive.length-2).split(',');
+        }
+        // executive = executive.toString().substring(2, executive.length-2).split(',');
+        const responseExecutive = await this.imageProcessingService.processExecutiveDraw(executive[0]);
+        createUserAnswersDto.executiveDraw = [...executive, responseExecutive];
+        if(responseExecutive.isSimilar == 'yes'){
+            console.log(responseExecutive.isSimilar);
+            executiveLinesDraw++;
+        }else if(responseExecutive.isCorrect == 'no'){
+            console.log(responseExecutive.isSimilar);
+            executiveLinesDraw++;
+        }        
+
+
+        console.log("#######");
+        console.log("Orientation: "+orientation);
+        console.log("Naming: "+naming);
+        console.log("Similarities "+similarities);
+        console.log("Calculation: "+calculation);
+        console.log("Construction Redraw: "+constructionRedraw);
+        console.log("Construction Draw: "+constructionDraw);
+        console.log("Verbal: "+verbal);
+        console.log("Executive Trail: "+executiveTrail);
+        console.log("Executive Draw: "+executiveLinesDraw);
+        console.log("Memory: "+memory);
+
+        grade = orientation +  naming + similarities + calculation + constructionRedraw + constructionDraw + verbal + executiveTrail + executiveLinesDraw + memory;
+        console.log(grade);
+        
+
         // return {responseCube, responseExecutive};
+        return {grade, createUserAnswersDto};
+        // return {
+        //     "Total grade ":grade,
+        //     "DATE RESPONSE ":orientation,
+        //     "NAMING RESPONSE ":namingResponse,
+        //     "SIMILARITIES RESPONSE ":similaritiesResponse,
+        //     "CALCULATION RESPONSE ":calculationResponse,
+        //     "WORDS RESPONSE ":verbalWordsResponse,
+        //     "TRAIL RESPONSE ":trailResponse,
+        //     "MEMORY RESPONSE ":memoryResponse,
+        //     "DRAW RESPONSE": constructionDraw,
+        //     "CUBE RESPONSE": responseCube,
+        //     "EXECUTIVE DRAW RESPONSE": responseExecutive,
+        // };
     }
 
     async update(id: number, changes: UpdateUserAnswersDto){
@@ -101,18 +251,22 @@ export class UserAnswersService {
         var grade = 0;
         const currentDate = new Date();
         currentDate.setHours(currentDate.getHours());
-        const day = currentDate.getDate().toString();
+        var day = currentDate.getDate().toString();
         var month = (currentDate.getMonth()+1).toString(); 
         const year = currentDate.getFullYear().toString();
 
-        console.log(currentDate);
+        console.log(day);
+        console.log(month);
 
-        if(month.length === 1){ 
+        if(createUserAnswersDto.orientationMonth[0] === '0'){
             month = '0' + month;
         }
-        if(createUserAnswersDto.orientationMonth.length === 1){
-            createUserAnswersDto.orientationMonth = '0' + createUserAnswersDto.orientationMonth;
+        if(createUserAnswersDto.orientationDay[0] === '0'){
+            day = '0' + day;
         }
+        // if(createUserAnswersDto.orientationMonth.length === 1){
+        //     createUserAnswersDto.orientationMonth = '0' + createUserAnswersDto.orientationMonth;
+        // }
         
         if(createUserAnswersDto.orientationMonth == month.toString()){
             createUserAnswersDto.orientationMonth = createUserAnswersDto.orientationMonth + "|correct";
@@ -122,7 +276,7 @@ export class UserAnswersService {
         }        
         if(createUserAnswersDto.orientationDay == day.toString()){
             createUserAnswersDto.orientationDay = createUserAnswersDto.orientationDay + "|correct";
-            grade++;
+            grade=grade+2;
         }else{
             createUserAnswersDto.orientationDay = createUserAnswersDto.orientationDay + "|incorrect";
         }        
@@ -241,19 +395,69 @@ export class UserAnswersService {
         return {grade, grade1, grade2};
     }
 
-    async gradeWords(words: string){
-        // var array = words.substring(2, words.length-2).split('",');
-        var array = words.substring(2, words.length-2).split(',').map(word => word.replace(/"/g, ''));        
+    async gradeWords(words: string[]){        
+        if(words[0].length == 1){
+            words = words.toString().substring(2, words.length-2).split(',').map(word => word.replace(/"/g, ''));
+        }
+        
         var grade = 0;
         var animals = await this.getAnimals();
-        for (const word of array){
-            var fixedWord = this.correctSpelling(word);
-            if(animals.includes(word)){
-                console.log("Includes: " + word);
+        for (const word of words){
+            var fixedWord = await this.correctSpellingContext(word, 'animals');
+            console.log(fixedWord);
+            if(animals.some(async animal => animal.includes(await fixedWord))){
                 grade++;
+                console.log("Includes: " + word + " | Grade: " + grade);
             }
         }
         return grade;
+    }
+
+    gradeTrail(trail: string){        
+        const answer = ["1","A","2","B","3","C"];
+        var trailArray = trail.substring(1, trail.length-1).split(',').map(item => item.trim());
+        console.log("RIGHT ANSWER: "+answer);
+        console.log("TRAIL: "+trailArray);
+        var differences = 0;
+        for (let i = 0; i < answer.length; i++) {
+            console.log("Comparing: " + answer[i] + " with " + trailArray[i])
+            if (answer[i] !== trailArray[i]) {
+                differences++;
+            }
+        }
+        // for (let i = 0; i < answer.length; i += 2) {
+        //     console.log("Comparing: " + answer[i] + " with " + trailArray[i])
+        //     console.log("Comparing: " + answer[i+1] + " with " + trailArray[i+1])
+        //     if (answer[i] !== trailArray[i] || answer[i+1] !== trailArray[i+1]) {
+        //         differences++;
+        //     }
+        // }
+
+        console.log("DIFFERENCES: " + differences);
+        if(differences === 0){
+            return 2;
+        }else if(differences <= 3){
+            return 1;
+        }else{
+            return 0;
+        }
+    }
+
+    async memoryGrade(phrase: string){
+        const correctPhrase = "i am done";
+        phrase = phrase.toLowerCase();
+        var fixedPhraseArray = phrase.split(' ').map(word => this.correctSpelling(word));
+        var fixedPhrase = (await Promise.all(fixedPhraseArray)).join(' ');
+        console.log(fixedPhrase);
+        if(correctPhrase === await fixedPhrase){
+            console.log("EQUALS");
+            return 2;
+        }else if(phrase.includes('done')){
+            console.log("INCLUDES DONE");
+            return 1;
+        }else{
+            return 0;
+        }
     }
 
     async correctSpelling(word: string){
@@ -267,13 +471,37 @@ export class UserAnswersService {
         }
     }
 
+    async correctSpellingContext(word: string, context: string){
+        const result = await nodehun.suggest(word);
+        if(context === 'animals'){
+            const animals = await this.getAnimals();
+            if(result != null && result.length > 0){
+                for (const suggestion of result) {
+                    if (animals.includes(suggestion.toLowerCase())) {
+                        console.log("The word "+ word + " is incorrect. The correct word is "+ suggestion);
+                        return suggestion;
+                    }
+                }
+            }
+    
+            console.log("The word "+ word + " is correct.")
+            return word;
+        }else{
+            console.log("DID NOTHING");
+            return word;
+        }
+
+        
+    }
+
     async getAnimals(): Promise<string[]> {
         return new Promise((resolve, reject) => {
             fs.readFile('src/dictionaries/lowercase_animals.csv', 'utf8', (err, data) => {
                 if (err) {
                     reject(err);
                 } else {
-                    const animals = data.split(',');
+                    const animals = data.split(',');    
+                    console.log(animals.length);
                     resolve(animals);
                 }
             });

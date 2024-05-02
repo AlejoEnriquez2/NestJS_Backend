@@ -5,7 +5,7 @@ export class CreateTestDto {
 
     @IsNotEmpty()
     @ApiProperty({ description: 'The date the Test was taken' })
-    testDate: Date;
+    testDate: string;
 
     @IsNotEmpty()
     @IsPositive()
