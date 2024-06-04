@@ -6,7 +6,11 @@ export class CreateFormDto {
     
     @IsNotEmpty()
     @ApiProperty({ description: 'The images that are supposed to be named' })
-    namingImages: Buffer;
+    namingImage1: string;
+
+    @IsNotEmpty()
+    @ApiProperty({ description: 'The images that are supposed to be named' })
+    namingImage2: string;
 
     @IsNotEmpty()
     @ApiProperty({ description: 'The abstract question of the test' })
@@ -22,15 +26,15 @@ export class CreateFormDto {
 
     @IsNotEmpty()
     @ApiProperty({ description: 'The picture that is supposed to be redrawn' })
-    redrawPicture: Buffer;
+    redrawPicture: string;
 
     @IsNotEmpty()
     @ApiProperty({ description: 'The picture that is supposed to be drawn' })
-    drawInstructions: Buffer;
+    drawInstructions: string;
 
     @IsNotEmpty()
     @ApiProperty({ description: 'The answer of the drawing' })
-    drawAnswer: Buffer;
+    drawAnswer: string;
 
     @IsNotEmpty()
     @ApiProperty({ description: 'The instructions for the writing part' })
@@ -46,7 +50,7 @@ export class CreateFormDto {
 
     @IsNotEmpty()
     @ApiProperty({ description: 'The image for the executive part' })
-    executiveImage: Buffer;
+    executiveImage: string;
 }
 
 export class UpdateFormDto extends PartialType(CreateFormDto) {}

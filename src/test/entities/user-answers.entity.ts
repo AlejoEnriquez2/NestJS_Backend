@@ -53,7 +53,10 @@ export class UserAnswers {
     executiveDraw: string[];
 
     @Column({type: 'varchar', length: 50})
-    memoryPhrase: string;
+    memoryPhrase: string | null = null;
+
+    @Column({type: 'integer', nullable: true})
+    grade: number | null = null;
     
     // TABLE FUNCTIONS //
 

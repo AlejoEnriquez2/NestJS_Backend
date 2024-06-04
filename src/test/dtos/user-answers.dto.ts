@@ -74,6 +74,10 @@ export class CreateUserAnswersDto {
     @ApiProperty({ description: 'The user`s answer of the memory final phrase'})
     memoryPhrase: string;
 
+    @IsOptional()
+    @ApiProperty({ description: 'The user`s grade of the test'})
+    grade: number | null;
+
 }
 
 export class UpdateUserAnswersDto extends PartialType(CreateUserAnswersDto) {}

@@ -7,7 +7,6 @@ import { ImageProcessingService } from './image-processing.service';
 import * as natural from 'natural';
 import { Nodehun } from 'nodehun'
 import * as fs from 'fs';
-import * as csv from 'csv-parser';
 
 const affix = fs.readFileSync('src/dictionaries/en_US.aff');
 const dictionary = fs.readFileSync('src/dictionaries/en_US.dic');
@@ -30,25 +29,26 @@ export class UserAnswersService {
         if (!userAnswers) {
             throw new NotFoundException(`UserAnswers #${id} not found`);
         }
-        
-        // const userAnswersGraded = await this.gradeTest(userAnswers);
-        // this.userAnswersRepository.update(userAnswers.answersId, userAnswersGraded.createUserAnswersDto);
-
         return userAnswers;
     }
 
-    async create(createUserAnswersDto: CreateUserAnswersDto): Promise<UserAnswers>{
+    async create(createUserAnswersDto: CreateUserAnswersDto): Promise<any>{
         const userAnswers = this.userAnswersRepository.create(createUserAnswersDto);
         
         const savedUserAnswers = await this.userAnswersRepository.save(userAnswers);
         
+        // try{
         const userAnswersGraded = await this.gradeTest(userAnswers);
+        console.log("ABOUT TO SAVE GRADE: " + userAnswersGraded.createUserAnswersDto.grade);
         this.userAnswersRepository.update(userAnswers.answersId, userAnswersGraded.createUserAnswersDto);
+        // }catch(error){
+        //     console.log(error);
+        // }
 
         return savedUserAnswers;
     }
 
-    async gradeTest(createUserAnswersDto: CreateUserAnswersDto){     
+    async gradeTest(createUserAnswersDto: CreateUserAnswersDto){
         var grade = 0;                  // Total grade. Possible points: 22 
         var orientation = 0;            // Day, month and year. Possible points: 4
         var naming = 0;                 // Naming of the pictures. Possible points: 2 
@@ -147,24 +147,6 @@ export class UserAnswersService {
                 }
             }
         }
-        // } catch (error) {
-        //     var words = createUserAnswersDto.verbalWords.toString().substring(2, createUserAnswersDto.verbalWords.length-2).split(',').map(word => word.replace(/"/g, ''));
-        //     console.log(words);
-        //     console.log("WORDS LENGTH 2: "+words.length);
-        //     if((await verbalWordsResponse) === 12){
-        //         verbal = 2;
-        //         words.push('|correct');
-        //         createUserAnswersDto.verbalWords = words;
-        //     }else if((await verbalWordsResponse) >= 10){
-        //         verbal = 1;
-        //         words.push('|half-correct');
-        //         createUserAnswersDto.verbalWords = words;
-        //     }else{
-        //         verbal = 0;
-        //         words.push('|incorrect');
-        //         createUserAnswersDto.verbalWords = words;
-        //     }
-        // }
 
         if (trailResponse === 2){
             executiveTrail = 2;
@@ -228,23 +210,10 @@ export class UserAnswersService {
 
         grade = orientation +  naming + similarities + calculation + constructionRedraw + constructionDraw + verbal + executiveTrail + executiveLinesDraw + memory;
         console.log(grade);
-        
 
-        // return {responseCube, responseExecutive};
-        return {grade, createUserAnswersDto};
-        // return {
-        //     "Total grade ":grade,
-        //     "DATE RESPONSE ":orientation,
-        //     "NAMING RESPONSE ":namingResponse,
-        //     "SIMILARITIES RESPONSE ":similaritiesResponse,
-        //     "CALCULATION RESPONSE ":calculationResponse,
-        //     "WORDS RESPONSE ":verbalWordsResponse,
-        //     "TRAIL RESPONSE ":trailResponse,
-        //     "MEMORY RESPONSE ":memoryResponse,
-        //     "DRAW RESPONSE": constructionDraw,
-        //     "CUBE RESPONSE": responseCube,
-        //     "EXECUTIVE DRAW RESPONSE": responseExecutive,
-        // };
+        createUserAnswersDto.grade = grade;
+        
+        return {grade, createUserAnswersDto};        
     }
 
     async update(id: number, changes: UpdateUserAnswersDto){
@@ -354,7 +323,7 @@ export class UserAnswersService {
         var grade = 0;
         const stemmer = natural.PorterStemmer;
         const tokenizer = new natural.WordTokenizer();
-        const abstractKeywords = ['concept', 'function', 'abstract', 'measure', 'idea', 'measuring', 'measures', 'checking'];
+        const abstractKeywords = ['count','concept', 'function', 'abstract', 'measure', 'idea', 'measuring', 'measures', 'checking'];
         const concreteKeywords = ['attribute', 'markings', 'object', 'tangible', 'concrete', 'physical', 'details', 'number', 'numeric'];
 
         const tokens = tokenizer.tokenize(similarities.toLowerCase());
@@ -425,7 +394,7 @@ export class UserAnswersService {
     }
 
     gradeTrail(trail: string){        
-        const answer = ["1","A","2","B","3","C"];
+        const answer = ["1","A","2","B","3","C","4","D","5","E","6","F"];
         var trailArray = trail.substring(1, trail.length-1).split(',').map(item => item.trim());
         console.log("RIGHT ANSWER: "+answer);
         console.log("TRAIL: "+trailArray);
@@ -517,8 +486,7 @@ export class UserAnswersService {
                 }
             });
         });
-    }    
-
+    }
 }
 
 

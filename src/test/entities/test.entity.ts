@@ -57,6 +57,12 @@ export class Test{
     @Column({type: 'boolean'})
     patientDifficulties: boolean;
 
+    @Column({type: 'int'})
+    formId: number;
+
+    @Column({type: 'varchar', length: 50})
+    testLanguage: string;
+
     // TABLE FUNCTIONS //
 
     @CreateDateColumn({
@@ -81,9 +87,9 @@ export class Test{
     @JoinColumn({name: 'answersId'})
     answers: UserAnswers;
 
-    @ManyToOne(() => Form, {nullable: true})
-    @JoinColumn({name: 'formId'})
-    form: Form;
+    // @ManyToOne(() => Form, {nullable: true})
+    // @JoinColumn({name: 'formId'})
+    // form: Form | null;
 
     @ManyToOne(() => Patient, {nullable: true})
     @JoinColumn({name: 'patientId'})

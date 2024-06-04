@@ -24,17 +24,21 @@ export class TestService {
     ) {}
 
     findAll(): Promise<Test[]>{
-        return this.testRepository.find();
+        return this.testRepository.find({
+            relations: ['answers', 'patient']
+        
+        });
     }
 
     async findOne(id: number): Promise<Test>{
-        const test = await this.testRepository.findOne(id);
+        const test = await this.testRepository.findOne({
+            where: { testId: id },
+            relations: ['answers', 'patient']
+        });
         var userAnswers = new UserAnswers();
         if (!test) {
             throw new NotFoundException(`Test #${id} not found`);
         }
-        userAnswers = await this.userAnswersService.findOne(30);
-        console.log("Should be the base64 Image: "+userAnswers.constructionsRedraw)
         // var response = await this.imageProcessingService.processImage(userAnswers.constructionsRedraw);   
         // console.log(response.type);
         // console.log(userAnswers.constructionsRedraw);
@@ -52,13 +56,24 @@ export class TestService {
             newTest.answers = userAnswers;
         }
         if (test.formId) {
-            const form = await this.formService.findOne(test.formId);
-            newTest.form = form;
+            // const form = await this.formService.findOne(test.formId);
+            newTest.formId = test.formId;
+            newTest.testTotalGrade = userAnswers.grade;
+            
         }
         if (test.patientId) {
             const patient = await this.patientService.findOne(test.patientId);
             newTest.patient = patient;
-        }                        
+            newTest.patient.grade = userAnswers.grade;
+            if(userAnswers.grade >= 18){
+                newTest.patient.status = "Normal";
+            }else if(userAnswers.grade < 17 && userAnswers.grade > 13){
+                newTest.patient.status = "Mild Cognitive Impairment, check a doctor soon";
+            }else{
+                newTest.patient.status = "Go check a doctor as soon as possible";
+            }
+            await this.patientService.update(test.patientId, newTest.patient);
+        }
         return this.testRepository.save(newTest);
     }
 
@@ -69,8 +84,8 @@ export class TestService {
             test.answers = userAnswers;
         }
         if(changes.formId){
-            const form = await this.formService.findOne(changes.formId);
-            test.form = form;
+            // const form = await this.formService.findOne(changes.formId);
+            test.formId = changes.formId;
         }
         if(changes.patientId){
             const patient = await this.patientService.findOne(changes.patientId);

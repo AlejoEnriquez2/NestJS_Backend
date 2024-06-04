@@ -68,21 +68,23 @@ export class CreateTestDto {
     @ApiProperty({ description: 'Everyday difficulties' })
     patientDifficulties: boolean;
 
+    @IsNotEmpty()
+    @ApiProperty({ description: 'The language of the Test' })
+    testLanguage: string;
 
     @IsNotEmpty()
     @IsPositive()
     @ApiProperty({ description: 'The id of the Answers of the test' })
-    readonly answersId: number;
-
-    @IsNotEmpty()
+    answersId: number;
+    
     @IsPositive()
     @ApiProperty({ description: 'The form the Test is using' })
-    readonly formId: number;
+    formId: number | null;
 
     @IsNotEmpty()
     @IsPositive()
     @ApiProperty({ description: 'The id of the Patient that took the Test' })
-    readonly patientId: number;
+    patientId: number;
 }
 
 export class UpdateTestDto extends PartialType(CreateTestDto) { }
