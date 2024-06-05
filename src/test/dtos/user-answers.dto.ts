@@ -64,6 +64,9 @@ export class CreateUserAnswersDto {
     @ApiProperty({ description: 'The lines the user selected'})
     executiveLinesDraw: string[];    
 
+    @IsNotEmpty()
+    @ApiProperty({ description: 'The form id of the test'})
+    formId: number;
 
     @IsNotEmpty()
     @IsArray()

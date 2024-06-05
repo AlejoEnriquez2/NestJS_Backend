@@ -49,6 +49,7 @@ export class UserAnswersService {
     }
 
     async gradeTest(createUserAnswersDto: CreateUserAnswersDto){
+        
         var grade = 0;                  // Total grade. Possible points: 22 
         var orientation = 0;            // Day, month and year. Possible points: 4
         var naming = 0;                 // Naming of the pictures. Possible points: 2 
@@ -63,7 +64,7 @@ export class UserAnswersService {
 
 
         orientation = await this.gradeDate(createUserAnswersDto);        
-        var namingResponse = await this.gradeNaming(createUserAnswersDto.namingPicture1, createUserAnswersDto.namingPicture2);        
+        var namingResponse = await this.gradeNaming(createUserAnswersDto.namingPicture1, createUserAnswersDto.namingPicture2,createUserAnswersDto.formId);        
         var similaritiesResponse = await this.gradeSimilarities(createUserAnswersDto.similarities);
         var calculationResponse = await this.gradeCalculation(parseFloat(createUserAnswersDto.calculation1), parseFloat(createUserAnswersDto.calculation2));        
         var verbalWordsResponse = await this.gradeWords(createUserAnswersDto.verbalWords);
@@ -264,17 +265,27 @@ export class UserAnswersService {
         return grade;  
     }
 
-    async gradeNaming(name1: string, name2: string){  
+    async gradeNaming(name1: string, name2: string, formId: number){  
         var fixed1 = await this.correctSpelling(name1);
         var fixed2 = await this.correctSpelling(name2);
         var responseName1 = '';
         var responseName2 = '';
+        var originalWord1 = '';
+        var originalWord2 = '';
 
         const wordnet = new natural.WordNet();   
         var grade = 0;
+
+        if(formId === 1){
+            originalWord1 = 'wreath';
+            originalWord2 = 'volcano';
+        }else if(formId === 4){
+            originalWord1 = 'rhino';
+            originalWord2 = 'harp';
+        }
         
         await new Promise<void>((resolve) => {
-            wordnet.lookup("wreath", function(details) {          
+            wordnet.lookup(originalWord1, function(details) {          
                 for (const detail of details){
                     if (detail.synonyms.includes(fixed1)) {
                         grade++;
@@ -295,7 +306,7 @@ export class UserAnswersService {
         });
 
         await new Promise<void>((resolve) => {
-            wordnet.lookup("volcano", function(details) {          
+            wordnet.lookup(originalWord2, function(details) {          
                 for (const detail of details){
                     if (detail.synonyms.includes(fixed2)) {
                         grade++;

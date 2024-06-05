@@ -57,6 +57,9 @@ export class UserAnswers {
 
     @Column({type: 'integer', nullable: true})
     grade: number | null = null;
+
+    @Column({type: 'integer', nullable: true})
+    formId: number | null = null;
     
     // TABLE FUNCTIONS //
 
