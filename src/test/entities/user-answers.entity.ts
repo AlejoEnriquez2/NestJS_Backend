@@ -7,7 +7,7 @@ export class UserAnswers {
     @PrimaryGeneratedColumn()
     answersId: number;
 
-    @Column({type: 'varchar', length: 15})
+    @Column({type: 'varchar', length: 25})
     orientationMonth: string;
 
     @Column({type: 'varchar', length: 15})
@@ -60,6 +60,9 @@ export class UserAnswers {
 
     @Column({type: 'integer', nullable: true})
     formId: number | null = null;
+
+    @Column({type: 'varchar', length: 10, nullable: true})
+    testLanguage: string;
     
     // TABLE FUNCTIONS //
 

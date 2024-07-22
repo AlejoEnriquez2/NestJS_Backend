@@ -1,5 +1,5 @@
 import { ApiProperty, PartialType } from "@nestjs/swagger";
-import { IsDate, IsNotEmpty, IsPositive } from "class-validator";
+import { IsDate, IsNotEmpty, IsOptional, IsPositive } from "class-validator";
 
 export class CreateTestDto {
 
@@ -80,6 +80,34 @@ export class CreateTestDto {
     @IsPositive()
     @ApiProperty({ description: 'The form the Test is using' })
     formId: number | null;
+
+    ////// NASA TLX //////
+    @IsOptional()
+    @ApiProperty({ description: 'The mental demand of the test'})
+    mentalDemand: number | null;
+
+    @IsOptional()
+    @ApiProperty({ description: 'The physical demand of the test'})
+    physicalDemand: number | null;
+
+    @IsOptional()
+    @ApiProperty({ description: 'The temporal demand of the test'})
+    temporalDemand: number | null;
+
+    @IsOptional()
+    @ApiProperty({ description: 'The performance of the test'})
+    performance: number | null;
+
+    @IsOptional()
+    @ApiProperty({ description: 'The effort of the test'})
+    effort: number | null;
+
+    @IsOptional()
+    @ApiProperty({ description: 'The frustration of the test'})
+    frustration: number | null;
+
+    ///////
+
 
     @IsNotEmpty()
     @IsPositive()

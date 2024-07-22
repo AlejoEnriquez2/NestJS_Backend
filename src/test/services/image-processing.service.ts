@@ -9,12 +9,13 @@ export class ImageProcessingService {
         private httpService: HttpService,        
     ) {}
 
-    async processCubeDraw(base64Image: string): Promise<any> {
+    async processCubeDraw(base64Image: string, formId: number): Promise<any> {
         console.log('Processing image...');
 
         try {
             const response = await lastValueFrom(this.httpService.post('http://localhost:5000/draw_recognizer', {
-                image: base64Image
+                image: base64Image,
+                formId: formId
             }, {
                 headers: {
                     'Content-Type': 'application/json',
@@ -29,11 +30,12 @@ export class ImageProcessingService {
         }
     }
 
-    async processExecutiveDraw(base64: string): Promise<any>{
+    async processExecutiveDraw(base64: string, formId: number): Promise<any>{
         console.log('Processing Executive image...');
         try {
             const response = await lastValueFrom(this.httpService.post('http://localhost:5000/executive_recognizer', {
-                image: base64
+                image: base64,
+                formId: formId
             }, {
                 headers: {
                     'Content-Type': 'application/json',

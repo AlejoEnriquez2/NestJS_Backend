@@ -69,6 +69,10 @@ export class CreateUserAnswersDto {
     formId: number;
 
     @IsNotEmpty()
+    @ApiProperty({ description: 'The language of the test'})
+    testLanguage: string;
+
+    @IsNotEmpty()
     @IsArray()
     @ApiProperty({ description: 'The user`s drawing of the executive part'})
     executiveDraw: string[];

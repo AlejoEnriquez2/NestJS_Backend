@@ -64,12 +64,12 @@ export class UserAnswersService {
 
 
         orientation = await this.gradeDate(createUserAnswersDto);        
-        var namingResponse = await this.gradeNaming(createUserAnswersDto.namingPicture1, createUserAnswersDto.namingPicture2,createUserAnswersDto.formId);        
-        var similaritiesResponse = await this.gradeSimilarities(createUserAnswersDto.similarities);
-        var calculationResponse = await this.gradeCalculation(parseFloat(createUserAnswersDto.calculation1), parseFloat(createUserAnswersDto.calculation2));        
-        var verbalWordsResponse = await this.gradeWords(createUserAnswersDto.verbalWords);
+        var namingResponse = await this.gradeNaming(createUserAnswersDto.namingPicture1, createUserAnswersDto.namingPicture2, createUserAnswersDto.formId, createUserAnswersDto.testLanguage);        
+        var similaritiesResponse = await this.gradeSimilarities(createUserAnswersDto.similarities, createUserAnswersDto.testLanguage, createUserAnswersDto.formId);
+        var calculationResponse = this.gradeCalculation(parseFloat(createUserAnswersDto.calculation1), parseFloat(createUserAnswersDto.calculation2), createUserAnswersDto.formId);
+        var verbalWordsResponse = await this.gradeWords(createUserAnswersDto.verbalWords, createUserAnswersDto.formId, createUserAnswersDto.testLanguage);
         var trailResponse = this.gradeTrail(createUserAnswersDto.executiveTrail);
-        var memoryResponse = await this.memoryGrade(createUserAnswersDto.memoryPhrase);
+        var memoryResponse = await this.memoryGrade(createUserAnswersDto.memoryPhrase, createUserAnswersDto.formId, createUserAnswersDto.testLanguage);
         
         createUserAnswersDto.namingPicture1 = createUserAnswersDto.namingPicture1 + (await namingResponse).responseName1;
         createUserAnswersDto.namingPicture2 = createUserAnswersDto.namingPicture2 + (await namingResponse).responseName2;
@@ -95,7 +95,7 @@ export class UserAnswersService {
                 cube = cube.toString().substring(2, cube.length-2).split(',');
             }
 
-            const responseCube = await this.imageProcessingService.processCubeDraw(cube[0]);
+            const responseCube = await this.imageProcessingService.processCubeDraw(cube[0], createUserAnswersDto.formId);
             createUserAnswersDto.constructionsRedraw = [...cube, responseCube];
             if(responseCube.isCube == 'yes'){
                 console.log(responseCube.isCube);
@@ -160,12 +160,19 @@ export class UserAnswersService {
             createUserAnswersDto.executiveTrail = createUserAnswersDto.executiveTrail + '|incorrect';
         }
         
-        if(parseInt(createUserAnswersDto.executiveLines) === 4){
+        var executiveLinesForm = 0;
+        if(createUserAnswersDto.formId === 1){
+            executiveLinesForm = 4;
+        }else{
+            executiveLinesForm = 2;
+        }
+        if(parseInt(createUserAnswersDto.executiveLines) === executiveLinesForm){
             executiveLinesDraw++;
             createUserAnswersDto.executiveLines = createUserAnswersDto.executiveLines + '|correct';
         }else{
             createUserAnswersDto.executiveLines = createUserAnswersDto.executiveLines + '|incorrect';
         }
+        
 
         if((await memoryResponse) === 2){
             memory = 2;
@@ -186,7 +193,7 @@ export class UserAnswersService {
                 executive = executive.toString().substring(2, executive.length-2).split(',');
             }
             // executive = executive.toString().substring(2, executive.length-2).split(',');
-            const responseExecutive = await this.imageProcessingService.processExecutiveDraw(executive[0]);
+            const responseExecutive = await this.imageProcessingService.processExecutiveDraw(executive[0], createUserAnswersDto.formId);
             createUserAnswersDto.executiveDraw = [...executive, responseExecutive];
             if(responseExecutive.isSimilar == 'yes'){
                 console.log(responseExecutive.isSimilar);
@@ -265,15 +272,25 @@ export class UserAnswersService {
         return grade;  
     }
 
-    async gradeNaming(name1: string, name2: string, formId: number){  
-        var fixed1 = await this.correctSpelling(name1);
-        var fixed2 = await this.correctSpelling(name2);
+    async gradeNaming(name1: string, name2: string, formId: number, language: string){
         var responseName1 = '';
         var responseName2 = '';
         var originalWord1 = '';
         var originalWord2 = '';
+        var fixed1: string;
+        var fixed2: string;
 
-        const wordnet = new natural.WordNet();   
+        // console.log("THE LANGUAGE IS =====> " + language + " AND THE FORM IS =====> " + formId);
+        if(language === 'es'){
+            fixed1 = (await this.translateWord(name1)).replace(' ','').toString().toLowerCase().replace(',','');
+            fixed2 = (await this.translateWord(name2)).replace(' ','').toString().toLowerCase().replace(',','');
+            console.log("THE TRANSLATION 1 IS: " + fixed1 + " AND THE TRANSLATION 2 IS: " + fixed2);
+        }else{
+            fixed1 = (await this.correctSpelling(name1)).replace(' ','').toLowerCase().replace(',','');
+            fixed2 = (await this.correctSpelling(name2)).replace(' ','').toLowerCase().replace(',','');
+        }
+
+        const wordnet = new natural.WordNet();
         var grade = 0;
 
         if(formId === 1){
@@ -282,10 +299,10 @@ export class UserAnswersService {
         }else if(formId === 4){
             originalWord1 = 'rhino';
             originalWord2 = 'harp';
-        }
+        }        
         
         await new Promise<void>((resolve) => {
-            wordnet.lookup(originalWord1, function(details) {          
+            wordnet.lookup(originalWord1, async function(details) {          
                 for (const detail of details){
                     if (detail.synonyms.includes(fixed1)) {
                         grade++;
@@ -306,12 +323,12 @@ export class UserAnswersService {
         });
 
         await new Promise<void>((resolve) => {
-            wordnet.lookup(originalWord2, function(details) {          
+            wordnet.lookup(originalWord2, async function(details) {          
                 for (const detail of details){
                     if (detail.synonyms.includes(fixed2)) {
                         grade++;
                         // console.log("GRADE: " + grade + " - " + fixed2 + " it can be similar as " + detail.synonyms);
-                        if(fixed2 != name1){
+                        if(fixed2 != name2){
                             responseName2 = '|correct|*' +  fixed2 + '|' + detail.synonyms.toString();
                         }else{
                             responseName2 = '|correct|' + detail.synonyms.toString();
@@ -330,12 +347,29 @@ export class UserAnswersService {
         return {grade, responseName1, responseName2};
     }
 
-    async gradeSimilarities(similarities: string){
+    async gradeSimilarities(similarities: string, language: string, formId: number){
         var grade = 0;
         const stemmer = natural.PorterStemmer;
         const tokenizer = new natural.WordTokenizer();
-        const abstractKeywords = ['count','concept', 'function', 'abstract', 'measure', 'idea', 'measuring', 'measures', 'checking'];
-        const concreteKeywords = ['attribute', 'markings', 'object', 'tangible', 'concrete', 'physical', 'details', 'number', 'numeric'];
+        const wordnet = new natural.WordNet();
+        var abstractKeywords;
+        var concreteKeywords;
+
+        // console.log('----');
+
+        if(language === 'es'){
+            // console.log('translating... ' + similarities);
+            similarities = await this.translateWord(similarities);
+            // console.log('translated: ' + similarities);
+        }
+
+        if(formId == 1){
+            abstractKeywords = ['measurement','count', 'counting','concept', 'function', 'abstract', 'measure', 'idea', 'measuring', 'measures', 'checking'];
+            concreteKeywords = ['device','tool','attribute', 'marking', 'object', 'tangible', 'concrete', 'physical', 'detail', 'number', 'numeric','unit'];
+        }else if(formId == 4){
+            abstractKeywords = ['beautiful','flowering','perennial','symbolic','fragant','çolorful', 'color', 'decorative','natural','botanical','seasonal','çultivated','ephemeral','aesthetic'];
+            concreteKeywords = ['petal','stem','leave', 'root', 'object', 'bulb', 'flower', 'pollen', 'garden', 'seed', 'garden','plant','bloom'];
+        }
 
         const tokens = tokenizer.tokenize(similarities.toLowerCase());
         // console.log(tokens);
@@ -349,30 +383,78 @@ export class UserAnswersService {
             // console.log(fixedWords);
         }
 
-        const abstractScore = (fixedWords).filter(token => abstractKeywords.includes(token)).length;
-        const concreteScore = (fixedWords).filter(token => concreteKeywords.includes(token)).length;
+        var abstractScore = 0;
+        var concreteScore = 0;
 
-        console.log('ABSTRACT: '+ abstractScore + ' - CONCRETE: ' + concreteScore);
+        for(const word of fixedWords){
+            for(const keyword of abstractKeywords){
+                await new Promise<void>((resolve) => {
+                    wordnet.lookup(keyword, async function(details) {
+                        // console.log('LOOKUP ABSTRACT: ' + keyword + ' - ' + word);
+                        for (const detail of details){
+                            if (detail.synonyms.includes(word)) {
+                                abstractScore++;
+                                // console.log('ABSTRACT: ' + word + ' - ' + keyword + ' - ' + detail.synonyms);
+                                break;
+                            }
+                        }
+                        resolve();
+                    });
+                });
+            }
+            for(const keyword of concreteKeywords){
+                await new Promise<void>((resolve) => {
+                    wordnet.lookup(keyword, async function(details) {
+                        // console.log('LOOKUP CONCRETE: ' + keyword + ' - ' + word);
+                        for (const detail of details){
+                            if (detail.synonyms.includes(word)){
+                                concreteScore++;
+                                // console.log('CONCRETE: ' + word + ' - ' + keyword + ' - ' + detail.synonyms);
+                                break;
+                            }
+                        }
+                        resolve();
+                    });
+                });
+            }
+        }
+
+        // const abstractScore = (fixedWords).filter(token => abstractKeywords.includes(token)).length;
+        // const concreteScore = (fixedWords).filter(token => concreteKeywords.includes(token)).length;
+
+        // console.log('ABSTRACT: '+ abstractScore + ' - CONCRETE: ' + concreteScore);
 
         if(abstractScore > concreteScore){
             grade = 2;
         }else if(concreteScore > 0){
-            grade = 1;
+            grade = 1;  
         }
-        return grade;
+        // console.log('----');
+        return grade;        
     }
 
-    gradeCalculation(calculation1: number, calculation2: number){
+    gradeCalculation(calculation1: number, calculation2: number, formId: number){
         var grade = 0;
         var grade1 = '';
         var grade2 = '';
-        if (calculation1 == 12){
+        var answer1 = 0;
+        var answer2 = 0;
+
+        if(formId === 1){
+            answer1 = 12;
+            answer2 = 6.55
+        }else if(formId === 4){
+            answer1 = 27;
+            answer2 = 1.95;
+        }
+
+        if (calculation1 == answer1){
             grade++;
             grade1 = '|correct';
         }else{
             grade1 = '|incorrect';
         }
-        if(calculation2 == 6.55){
+        if(calculation2 == answer2){
             grade++;
             grade2 = '|correct';
         }else{
@@ -381,20 +463,35 @@ export class UserAnswersService {
         return {grade, grade1, grade2};
     }
 
-    async gradeWords(words: string[]){
-        console.log("WORDS EMPTY: " + typeof words);
+    async gradeWords(words: string[], formId: number, language: string){
+        // console.log("WORDS EMPTY: " + typeof words);
         console.log("WORDS EMPTY: " + words);
-        if(words.length != 0){
+        var finalWords = [];
+        if(words.length > 9){
             if(words[0].length == 1){
                 words = words.toString().substring(2, words.length-2).split(',').map(word => word.replace(/"/g, ''));
             }
+            var topic = '';
+            if(formId === 1){
+                topic = 'animals';
+            }else if(formId === 4){
+                topic = 'countries';
+            }
             
+            if(language === 'es'){
+                for (const word of words){
+                    var translation = await this.translateWord(word);
+                    finalWords.push(translation); 
+                }
+                words = finalWords;
+            }
+
             var grade = 0;
-            var animals = await this.getAnimals();
+            var wordList = await this.getWords(topic);            
             for (const word of words){
-                var fixedWord = await this.correctSpellingContext(word, 'animals');
+                var fixedWord = await this.correctSpellingContext(word, topic);
                 console.log(fixedWord);
-                if(animals.some(async animal => animal.includes(await fixedWord))){
+                if(wordList.some(async w => w.includes(await fixedWord))){
                     grade++;
                     console.log("Includes: " + word + " | Grade: " + grade);
                 }
@@ -411,7 +508,7 @@ export class UserAnswersService {
         console.log("TRAIL: "+trailArray);
         var differences = 0;
         for (let i = 0; i < answer.length; i++) {
-            console.log("Comparing: " + answer[i] + " with " + trailArray[i])
+            // console.log("Comparing: " + answer[i] + " with " + trailArray[i])
             if (answer[i] !== trailArray[i]) {
                 differences++;
             }
@@ -434,19 +531,36 @@ export class UserAnswersService {
         }
     }
 
-    async memoryGrade(phrase: string){
-        const correctPhrase = "i am done";
+    async memoryGrade(phrase: string, formId: number, language: string){
+        var correctPhrase = '';
         phrase = phrase.toLowerCase();
-        var fixedPhraseArray = phrase.split(' ').map(word => this.correctSpelling(word));
-        var fixedPhrase = (await Promise.all(fixedPhraseArray)).join(' ');
-        console.log(fixedPhrase);
+
+        if(language === 'en'){
+            if(formId === 1){
+                correctPhrase = "i am done";
+            }else{
+                correctPhrase = "i have finished";
+            }
+            var fixedPhraseArray = phrase.split(' ').map(word => this.correctSpelling(word));
+            var fixedPhrase = (await Promise.all(fixedPhraseArray)).join(' ');
+        }else if(language === 'es'){
+            if(formId === 1){
+                correctPhrase = "terminé";
+            }else{
+                correctPhrase = "he finalizado";
+            }
+            fixedPhrase = phrase;
+        }
+
+        console.log("CORRECT PHRASE: "+correctPhrase + " - To COMPARE PHRASE: "+fixedPhrase);
         if(correctPhrase === await fixedPhrase){
             console.log("EQUALS");
             return 2;
-        }else if(phrase.includes('done')){
+        }else if(phrase.includes('done') || phrase.includes('finished') || phrase.includes('terminé') || phrase.includes('finalizado')){
             console.log("INCLUDES DONE");
             return 1;
         }else{
+            console.log("IS NOT EQUAL");
             return 0;
         }
     }
@@ -454,49 +568,62 @@ export class UserAnswersService {
     async correctSpelling(word: string){
         const result = await nodehun.suggest(word);
         if(result != null && result.length > 0){
-            console.log("The word "+ word + " is incorrect. The correct word is "+ result[0]);
+            // console.log("The word "+ word + " is incorrect. The correct word is "+ result[0]);
             return result[0];
         }else{
-            console.log("The word "+ word + " is correct.")
+            // console.log("The word "+ word + " is correct.")
             return word;
         }
     }
 
     async correctSpellingContext(word: string, context: string){
-        const result = await nodehun.suggest(word);
-        if(context === 'animals'){
-            const animals = await this.getAnimals();
-            if(result != null && result.length > 0){
-                for (const suggestion of result) {
-                    if (animals.includes(suggestion.toLowerCase())) {
-                        console.log("The word "+ word + " is incorrect. The correct word is "+ suggestion);
-                        return suggestion;
-                    }
+        const result = await nodehun.suggest(word);        
+        const animals = await this.getWords(context);
+        if(result != null && result.length > 0){
+            for (const suggestion of result) {
+                if (animals.includes(suggestion.toLowerCase())) {
+                    // console.log("The word "+ word + " is incorrect. The correct word is "+ suggestion);
+                    return suggestion;
                 }
             }
-    
-            console.log("The word "+ word + " is correct.")
-            return word;
-        }else{
-            console.log("DID NOTHING");
-            return word;
         }
 
-        
+        // console.log("The word "+ word + " is correct.")
+        return word;
     }
 
-    async getAnimals(): Promise<string[]> {
+    async getWords(topic: string): Promise<string[]> {
         return new Promise((resolve, reject) => {
-            fs.readFile('src/dictionaries/lowercase_animals.csv', 'utf8', (err, data) => {
+            var path = '';
+            if(topic == 'animals'){
+                path = 'src/dictionaries/lowercase_animals.csv';
+            }else{
+                path = 'src/dictionaries/countries.csv';
+            }
+
+            fs.readFile(path, 'utf8', (err, data) => {
                 if (err) {
                     reject(err);
                 } else {
-                    const animals = data.split(',');    
-                    console.log(animals.length);
-                    resolve(animals);
+                    const words = data.split(',');    
+                    console.log(words.length);
+                    resolve(words);
                 }
             });
         });
+    }
+
+    async translateWord(word: string){
+        const {Translate} = require('@google-cloud/translate').v2;        
+        const translate = new Translate({key: 'AIzaSyC3N0QfUkAmXtDLnG9m8GJq0wfO9MjWXxQ'});
+        const options = {
+            from: 'es',
+            to: 'en',
+        };
+        
+        let [translations] = await translate.translate(word, options);
+        // console.log("TRANSLATION BACKEND: "+translations);
+        return translations;
     }
 }
 

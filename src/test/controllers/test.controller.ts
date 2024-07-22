@@ -35,6 +35,4 @@ export class TestController {
     update(@Param('id') id: number, @Body() payload: UpdateTestDto){
         return this.testService.update(id, payload);
     }
-
-
 }

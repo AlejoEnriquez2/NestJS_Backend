@@ -63,6 +63,25 @@ export class Test{
     @Column({type: 'varchar', length: 50})
     testLanguage: string;
 
+    // NASA TLX //
+    @Column({type: 'integer', nullable: true})
+    mentalDemand: number | null;
+
+    @Column({type: 'integer', nullable: true})
+    physicalDemand: number | null;
+
+    @Column({type: 'integer', nullable: true})
+    temporalDemand: number | null;
+
+    @Column({type: 'integer', nullable: true})
+    performance: number | null;
+
+    @Column({type: 'integer', nullable: true})
+    effort: number | null;
+
+    @Column({type: 'integer', nullable: true})
+    frustration: number | null; 
+
     // TABLE FUNCTIONS //
 
     @CreateDateColumn({

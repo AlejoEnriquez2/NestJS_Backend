@@ -26,6 +26,7 @@
     "migrations:drop": "npm run typeorm -- schema:drop"
   },
   "dependencies": {
+    "@google-cloud/translate": "^8.3.0",
     "@nestjs/axios": "^3.0.2",
     "@nestjs/common": "^8.0.0",
     "@nestjs/config": "^2.0.0",

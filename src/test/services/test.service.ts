@@ -48,7 +48,7 @@ export class TestService {
         return test;
     }
 
-    async create(test: CreateTestDto): Promise<Test>{
+    async create(test: CreateTestDto): Promise<{ testId: number }>{
         const newTest = await this.testRepository.create(test);
         var userAnswers = new UserAnswers();
         if (test.answersId) {
@@ -74,7 +74,8 @@ export class TestService {
             }
             await this.patientService.update(test.patientId, newTest.patient);
         }
-        return this.testRepository.save(newTest);
+        const savedTest = await this.testRepository.save(newTest);
+        return { testId: savedTest.testId };
     }
 
     async update(id: number, changes: UpdateTestDto){
